@@ -88,9 +88,14 @@ class _MainScreenState extends State<MainScreen> {
                 ),
               )
               : null,
-      bottomNavigationBar: AppBottomNavigation(
-        currentIndex: _index,
-        onTap: _onTab,
+      // 하단바를 SafeArea로 감싼다. 폰의 시스템 내비게이션(제스처 바·3버튼 바)이
+      // 화면 아래를 차지하면 하단바가 그 뒤에 가려져 반쯤 잘리기 때문이다.
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: AppBottomNavigation(
+          currentIndex: _index,
+          onTap: _onTab,
+        ),
       ),
     );
   }

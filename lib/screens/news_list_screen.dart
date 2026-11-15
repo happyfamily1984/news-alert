@@ -145,7 +145,12 @@ class _NewsListScreenState extends State<NewsListScreen> {
                 visible.isEmpty
                     ? ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(AppSizes.pagePadding),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSizes.pagePadding,
+                        AppSizes.pagePadding,
+                        AppSizes.pagePadding,
+                        AppSizes.tabListBottomPadding,
+                      ),
                       children: [
                         const SizedBox(height: 48),
                         Image.asset(
@@ -216,7 +221,12 @@ class _NewsListScreenState extends State<NewsListScreen> {
                     )
                     : ListView.separated(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(AppSizes.pagePadding),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSizes.pagePadding,
+                        AppSizes.pagePadding,
+                        AppSizes.pagePadding,
+                        AppSizes.tabListBottomPadding,
+                      ),
                       itemCount: visible.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 16),
                       itemBuilder: (context, index) {

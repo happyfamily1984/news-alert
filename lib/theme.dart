@@ -286,6 +286,10 @@ class AppSizes {
   static const double inputHeight = 64;
   static const double bottomNavHeight = 72;
   static const double fabSize = 56;
+  /// 하단 탭 화면(홈/뉴스/설정) 리스트의 하단 여백: 기본 여백(20) + 하단바(72).
+  /// 마지막 항목이 하단바에 닿지 않고 위로 충분히 올라오게 한다.
+  /// 플로팅 버튼(+)이 마지막 항목을 가리는 것도 막는다.
+  static const double tabListBottomPadding = pagePadding + bottomNavHeight;
   static const double appBarHeight = 64;
   static const double summaryCardMinHeight = 148;
   static const double keywordCardHeight = 84;

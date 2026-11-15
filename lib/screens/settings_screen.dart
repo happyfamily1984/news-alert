@@ -89,7 +89,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             animation: settings,
             builder: (context, _) {
               return ListView(
-                padding: const EdgeInsets.all(AppSizes.pagePadding),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSizes.pagePadding,
+                  AppSizes.pagePadding,
+                  AppSizes.pagePadding,
+                  AppSizes.tabListBottomPadding,
+                ),
                 children: [
                   _SectionTitle(title: '알림 설정', brightness: brightness),
                   const SizedBox(height: 16),

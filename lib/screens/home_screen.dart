@@ -219,7 +219,12 @@ class HomeScreenState extends State<HomeScreen> {
             onRefresh: reload,
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(AppSizes.pagePadding),
+              padding: const EdgeInsets.fromLTRB(
+                AppSizes.pagePadding,
+                AppSizes.pagePadding,
+                AppSizes.pagePadding,
+                AppSizes.tabListBottomPadding,
+              ),
               children: [
                 _SummaryCard(
                   todayTotal: _todayTotal,
