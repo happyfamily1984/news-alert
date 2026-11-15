@@ -35,6 +35,13 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- 알림 작은 아이콘: flutter_local_notifications가 이름('ic_notification')으로만
+             찾기 때문에, 릴리스 빌드의 리소스 축소가 이 파일을 지워버린다.
+             keep.xml(tools:keep)만으로는 안 지켜져서 매니페스트에서 직접 참조한다.
+             매니페스트에서 참조한 리소스는 축소 대상에서 제외된다. -->
+        <meta-data
+            android:name="com.happyfamily.newsalarm.notification_icon"
+            android:resource="@drawable/ic_notification" />
     </application>
 
     <!-- url_launcher가 외부 브라우저를 열 수 있게 한다 (Android 11+ 패키지 가시성). -->

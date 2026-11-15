@@ -2,6 +2,9 @@
 <!-- Dart 코드에서 문자열 이름으로만 참조하는 리소스는 릴리스 빌드의
      리소스 축소(shrinkResources) 대상이 되어 APK에서 빠진다.
      flutter_local_notifications가 이름으로 찾는 ic_notification과
-     런처 원형 아이콘을 명시적으로 유지한다. -->
+     런처 원형 아이콘을 명시적으로 유지한다.
+     주의: keep.xml만으로는 안 지켜졌다(2026-11-15 빌드에서 ic_notification이
+     여전히 빠짐). 실제로 지키는 것은 AndroidManifest의 meta-data 참조이다.
+     이 파일은 혹시 모를 다른 축소 설정에 대비한 보험으로 둔다. -->
 <resources xmlns:tools="http://schemas.android.com/tools"
     tools:keep="@drawable/ic_notification,@mipmap/ic_launcher_round" />
