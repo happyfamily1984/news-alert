@@ -31,11 +31,24 @@ android {
         versionName = flutter.versionName
     }
 
+    // 서명: 깃허브 러너마다 새로 만드는 debug 키가 아니라 저장소에 넣어둔
+    // 고정 키스토어(app-keystore.p12)로 서명한다. 러너마다 키가 바뀌면
+    // 안드로이드가 서명이 다르다고 설치를 거부해서 매번 지우고 다시 깔아야 했다.
+    // 주의: 이 키는 공개 저장소에 들어 있고 비번도 아래에 그대로 적혀 있다.
+    // 직접 설치용 테스트 키로만 쓰고, Play 출시 때는 별도 비공개 키를 만들 것.
+    signingConfigs {
+        create("release") {
+            storeFile = file("app-keystore.p12")
+            storePassword = "android"
+            keyAlias = "newsalarm"
+            keyPassword = "android"
+            storeType = "PKCS12"
+        }
+    }
+
     buildTypes {
         release {
-            // v1은 직접 배포용으로 debug 서명을 쓴다.
-            // Play 스토어 출시 시에는 별도 키스토어로 교체해야 한다.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
