@@ -7,7 +7,8 @@ plugins {
 android {
     namespace = "com.happyfamily.newsalarm"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // 플러그인들이 요구하는 NDK 27.0.12077973로 고정 (flutter 기본값 26.x와 충돌 방지).
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
