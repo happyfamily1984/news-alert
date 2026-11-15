@@ -27,3 +27,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+dependency_overrides:
+  # workmanager_platform_interface 0.9.4가 foregroundServiceConfig를 넣어 깨졌는데
+  # workmanager_apple 0.9.4는 그 API가 없어 컴파일 실패한다(upstream 0.9.x 배포 불일치).
+  # Flutter 3.32.0에서 일관되게 해석되는 조합으로 고정.
+  workmanager_android: 0.9.2
+  workmanager_platform_interface: 0.9.3
