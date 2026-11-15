@@ -37,7 +37,7 @@ class AppBottomNavigation extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(Icons.newspaper_outlined),
             activeIcon: Icon(Icons.newspaper),
-            label: '뉴스',
+            label: '매칭 뉴스',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),

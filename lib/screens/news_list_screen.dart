@@ -4,10 +4,12 @@ import '../models/matched_article.dart';
 import '../services/news_check_service.dart';
 import '../services/storage_service.dart';
 import '../theme.dart';
+import '../widgets/app_background.dart';
 import '../widgets/news_card.dart';
 import 'article_detail_screen.dart';
 
-/// 화면 ③ 매칭 뉴스 목록.
+/// 화면 ③ 매칭 뉴스 목록. v3 시안:
+/// 그라데이션 배경, 종 아이콘 헤더, 빈 상태는 신문+돋보기 일러스트 + 팁 카드.
 /// 상단에 선택된 키워드 표시, 아래 매칭 뉴스를 최신순으로.
 /// 같은 기사가 여러 키워드에 매칭되면 한 번만 노출하고 키워드를 함께 표시.
 /// 새로 들어온 뉴스는 읽지 않음 표시.
@@ -105,63 +107,130 @@ class _NewsListScreenState extends State<NewsListScreen> {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final visible = _visible;
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppColors.surface(brightness),
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(
-          widget.filterKeyword == null
-              ? '매칭 뉴스'
-              : '‘${widget.filterKeyword}’ 뉴스',
-          style: AppTextStyles.screenTitle(brightness),
-        ),
-        actions: [
-          IconButton(
-            onPressed: _checking ? null : _checkNow,
-            icon: const Icon(Icons.refresh),
-            color: AppColors.textPrimary(brightness),
-            tooltip: '지금 확인',
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child:
-            visible.isEmpty
-                ? ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(AppSizes.pagePadding),
-                  children: [
-                    const SizedBox(height: 120),
-                    Center(
-                      child: Text(
-                        widget.filterKeyword == null
-                            ? '아직 매칭된 뉴스가 없습니다.\n키워드를 등록하고 ‘지금 확인’을 눌러보세요.'
-                            : '‘${widget.filterKeyword}’와(과) 매칭된 뉴스가 아직 없습니다.',
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.body(brightness).copyWith(
-                          color: AppColors.textSecondary(brightness),
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-                : ListView.separated(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(AppSizes.pagePadding),
-                  itemCount: visible.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final article = visible[index];
-                    return NewsCard(
-                      article: article,
-                      isRead: _readIds.contains(article.id),
-                      onTap: () => _openArticle(article),
-                    );
-                  },
+    return Stack(
+      children: [
+        const AppBackground(),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: Row(
+              children: [
+                Icon(
+                  Icons.notifications,
+                  color: AppColors.primary(brightness),
+                  size: 28,
                 ),
-      ),
+                const SizedBox(width: 10),
+                Text(
+                  widget.filterKeyword == null
+                      ? '매칭 뉴스'
+                      : '‘${widget.filterKeyword}’ 뉴스',
+                  style: AppTextStyles.screenTitle(brightness),
+                ),
+              ],
+            ),
+            actions: [
+              IconButton(
+                onPressed: _checking ? null : _checkNow,
+                icon: const Icon(Icons.refresh),
+                color: AppColors.textPrimary(brightness),
+                tooltip: '지금 확인',
+              ),
+              const SizedBox(width: 8),
+            ],
+          ),
+          body: RefreshIndicator(
+            onRefresh: _load,
+            child:
+                visible.isEmpty
+                    ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(AppSizes.pagePadding),
+                      children: [
+                        const SizedBox(height: 48),
+                        Image.asset(
+                          'assets/illustrations/empty_news.png',
+                          height: 210,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          '아직 매칭된 뉴스가 없습니다.',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.emptyTitle(brightness),
+                        ),
+                        const SizedBox(height: 8),
+                        RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            style: AppTextStyles.heroSubtitle(brightness),
+                            children: [
+                              const TextSpan(text: '키워드를 등록하고 '),
+                              TextSpan(
+                                text: '‘지금 확인’',
+                                style: AppTextStyles.heroSubtitle(
+                                  brightness,
+                                ).copyWith(
+                                  color: AppColors.primary(brightness),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const TextSpan(text: '을 눌러보세요.'),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.tipBackground(brightness),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.primaryLight,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.lightbulb,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  '키워드를 등록하면\n관심 있는 뉴스를 더 빠르게 받아볼 수 있어요!',
+                                  style: AppTextStyles.tipText(brightness),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )
+                    : ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(AppSizes.pagePadding),
+                      itemCount: visible.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 16),
+                      itemBuilder: (context, index) {
+                        final article = visible[index];
+                        return NewsCard(
+                          article: article,
+                          isRead: _readIds.contains(article.id),
+                          onTap: () => _openArticle(article),
+                        );
+                      },
+                    ),
+          ),
+        ),
+      ],
     );
   }
 }
