@@ -30,6 +30,6 @@ Future<void> registerPeriodicCheck() async {
     kPeriodicTaskType,
     frequency: Duration(minutes: interval),
     constraints: Constraints(networkType: NetworkType.connected),
-    existingWorkPolicy: ExistingWorkPolicy.replace,
+    existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
   );
 }
