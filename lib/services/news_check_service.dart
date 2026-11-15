@@ -20,13 +20,17 @@ class NewsCheckService {
 
     final existing = await storage.getArticles();
     final existingIds = existing.map((a) => a.id).toSet();
+    final enabledSources = await storage.getEnabledSources();
 
     // 피드별로 수집하면서 guid 기준으로 합치고 매칭 키워드를 모은다.
+    // 켜진 출처의 피드만 가져온다.
     final Map<String, MatchedArticle> fresh = {};
-    for (final (_, url) in RssService.feeds) {
+    for (final feed in RssService.feeds) {
+      final source = feed.name;
+      if (!enabledSources.contains(source)) continue;
       List<RssArticle> items;
       try {
-        items = await RssService().fetchFeed(url);
+        items = await RssService().fetchFeed(feed);
       } catch (_) {
         continue;
       }
@@ -53,6 +57,7 @@ class NewsCheckService {
             description: item.description,
             keywords: matched,
             fetchedAt: now,
+            source: source,
           );
         }
       }

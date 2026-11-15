@@ -72,7 +72,7 @@ class NewsCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '연합뉴스 · ${formatArticleTime(article.pubDate)}',
+                '${article.source} · ${formatArticleTime(article.pubDate)}',
                 style: AppTextStyles.meta(brightness),
               ),
             ],

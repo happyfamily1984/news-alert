@@ -9,6 +9,7 @@ class SettingsController extends ChangeNotifier {
   bool notificationsEnabled = true;
   int checkIntervalMinutes = 15;
   bool notifyNewOnly = true;
+  Set<String> enabledSources = {'연합뉴스', 'YTN', 'MBC', 'KBS'};
 
   bool _loaded = false;
 
@@ -24,6 +25,7 @@ class SettingsController extends ChangeNotifier {
     notificationsEnabled = await storage.getNotificationsEnabled();
     checkIntervalMinutes = await storage.getCheckIntervalMinutes();
     notifyNewOnly = await storage.getNotifyNewOnly();
+    enabledSources = await storage.getEnabledSources();
     _loaded = true;
     notifyListeners();
   }
@@ -56,6 +58,21 @@ class SettingsController extends ChangeNotifier {
   Future<void> setNotifyNewOnly(bool value) async {
     notifyNewOnly = value;
     await StorageService.instance.setNotifyNewOnly(value);
+    notifyListeners();
+  }
+
+  /// 출처 하나를 켜고 끈다. 전부 끄면 뉴스를 못 가져오니
+  /// 마지막으로 남은 하나는 끌 수 없게 막는다.
+  Future<void> setSourceEnabled(String source, bool enabled) async {
+    final next = Set<String>.from(enabledSources);
+    if (enabled) {
+      next.add(source);
+    } else {
+      if (next.length <= 1) return;
+      next.remove(source);
+    }
+    enabledSources = next;
+    await StorageService.instance.setEnabledSources(next);
     notifyListeners();
   }
 }

@@ -24,8 +24,24 @@ class StorageService {
   static const String _newOnlyKey = 'notify_new_only';
   static const String _lastCheckKey = 'last_check_at';
   static const String _themeKey = 'theme_mode';
+  static const String _sourcesKey = 'enabled_sources';
 
   static const int maxStoredArticles = 100;
+
+  /// 켜진 뉴스 출처 목록. 저장된 게 없으면 전부 켠 것으로 본다.
+  Future<Set<String>> getEnabledSources() async {
+    final prefs = await _store;
+    final saved = prefs.getStringList(_sourcesKey);
+    if (saved == null) return _allSources;
+    return saved.toSet();
+  }
+
+  static const Set<String> _allSources = {'연합뉴스', 'YTN', 'MBC', 'KBS'};
+
+  Future<void> setEnabledSources(Set<String> sources) async {
+    final prefs = await _store;
+    await prefs.setStringList(_sourcesKey, sources.toList());
+  }
 
   Future<List<String>> getKeywords() async {
     final prefs = await _store;

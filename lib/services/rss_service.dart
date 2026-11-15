@@ -20,28 +20,59 @@ class RssArticle {
   });
 }
 
-/// 연합뉴스 RSS 수집. API 키가 필요 없다.
+/// 뉴스 출처 하나: 언론사 이름 + RSS 주소.
+/// [titleSuffix]는 구글 뉴스 RSS 제목 끝에 붙는 ' - YTN' 같은
+/// 언론사 꼬리말이다. 있으면 제목에서 떼낸다.
+class FeedSource {
+  final String name;
+  final String url;
+  final String? titleSuffix;
+
+  const FeedSource(this.name, this.url, [this.titleSuffix]);
+}
+
+/// 뉴스 RSS 수집. API 키가 필요 없다.
 ///
-/// 확인된 피드 (2026-11-15 기준 200 응답):
-/// 전체·정치·경제·사회·국제·문화·스포츠·산업·연예·지역.
+/// 연합뉴스는 직접 피드(2026-11-15 기준 200 응답).
+/// YTN·MBC·KBS는 직접 피드가 막혀 있어 구글 뉴스 RSS(언론사별 site: 검색)로
+/// 가져온다. 직접 피드는 2026-11-15에 확인했더니 MBC·KBS는 404 오류 페이지,
+/// YTN은 홈페이지로 리디렉션이라 쓸 수 없었다. 구글 뉴스 RSS는 3곳 모두
+/// RSS 2.0 정상 확인됨.
 class RssService {
-  static const List<(String, String)> feeds = [
-    ('전체', 'https://www.yna.co.kr/rss/news.xml'),
-    ('정치', 'https://www.yna.co.kr/rss/politics.xml'),
-    ('경제', 'https://www.yna.co.kr/rss/economy.xml'),
-    ('사회', 'https://www.yna.co.kr/rss/society.xml'),
-    ('국제', 'https://www.yna.co.kr/rss/international.xml'),
-    ('문화', 'https://www.yna.co.kr/rss/culture.xml'),
-    ('스포츠', 'https://www.yna.co.kr/rss/sports.xml'),
-    ('산업', 'https://www.yna.co.kr/rss/industry.xml'),
-    ('연예', 'https://www.yna.co.kr/rss/entertainment.xml'),
-    ('지역', 'https://www.yna.co.kr/rss/local.xml'),
+  static const List<FeedSource> feeds = [
+    // 연합뉴스 (직접 피드): 전체·정치·경제·사회·국제·문화·스포츠·산업·연예·지역.
+    FeedSource('연합뉴스', 'https://www.yna.co.kr/rss/news.xml'),
+    FeedSource('연합뉴스', 'https://www.yna.co.kr/rss/politics.xml'),
+    FeedSource('연합뉴스', 'https://www.yna.co.kr/rss/economy.xml'),
+    FeedSource('연합뉴스', 'https://www.yna.co.kr/rss/society.xml'),
+    FeedSource('연합뉴스', 'https://www.yna.co.kr/rss/international.xml'),
+    FeedSource('연합뉴스', 'https://www.yna.co.kr/rss/culture.xml'),
+    FeedSource('연합뉴스', 'https://www.yna.co.kr/rss/sports.xml'),
+    FeedSource('연합뉴스', 'https://www.yna.co.kr/rss/industry.xml'),
+    FeedSource('연합뉴스', 'https://www.yna.co.kr/rss/entertainment.xml'),
+    FeedSource('연합뉴스', 'https://www.yna.co.kr/rss/local.xml'),
+    // YTN·MBC·KBS (구글 뉴스 RSS).
+    FeedSource(
+      'YTN',
+      'https://news.google.com/rss/search?q=site:ytn.co.kr&hl=ko&gl=KR&ceid=KR:ko',
+      ' - YTN',
+    ),
+    FeedSource(
+      'MBC',
+      'https://news.google.com/rss/search?q=site:imnews.imbc.com&hl=ko&gl=KR&ceid=KR:ko',
+      ' - MBC 뉴스',
+    ),
+    FeedSource(
+      'KBS',
+      'https://news.google.com/rss/search?q=site:news.kbs.co.kr&hl=ko&gl=KR&ceid=KR:ko',
+      ' - KBS 뉴스',
+    ),
   ];
 
-  Future<List<RssArticle>> fetchFeed(String url) async {
+  Future<List<RssArticle>> fetchFeed(FeedSource feed) async {
     final response = await http
         .get(
-          Uri.parse(url),
+          Uri.parse(feed.url),
           headers: {'User-Agent': 'NewsAlarm/1.0 (keyword news alert)'},
         )
         .timeout(const Duration(seconds: 20));
@@ -50,9 +81,15 @@ class RssService {
     final document = XmlDocument.parse(response.body);
     final articles = <RssArticle>[];
     for (final item in document.findAllElements('item')) {
-      final title = _decodeEntities(
+      var title = _decodeEntities(
         item.getElement('title')?.innerText.trim() ?? '',
       );
+      // 구글 뉴스 RSS 제목 끝의 ' - YTN' 같은 언론사 꼬리말을 떼낸다.
+      // 카드 아래에 출처가 따로 표시되니 제목에 두 번 나올 필요가 없다.
+      final suffix = feed.titleSuffix;
+      if (suffix != null && title.endsWith(suffix)) {
+        title = title.substring(0, title.length - suffix.length).trim();
+      }
       final link = item.getElement('link')?.innerText.trim() ?? '';
       final guid =
           item.getElement('guid')?.innerText.trim() ?? link;

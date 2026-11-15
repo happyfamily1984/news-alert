@@ -2,6 +2,7 @@
 ///
 /// [id]는 RSS guid(기사 고유 주소)이며 중복 제거 기준이다.
 /// [keywords]는 이 기사와 매칭된 키워드 목록이다 (여러 키워드 매칭 가능).
+/// [source]는 기사를 가져온 언론사 (연합뉴스 / YTN / MBC / KBS).
 class MatchedArticle {
   final String id;
   final String title;
@@ -10,6 +11,7 @@ class MatchedArticle {
   final String description;
   final List<String> keywords;
   final DateTime fetchedAt;
+  final String source;
 
   const MatchedArticle({
     required this.id,
@@ -19,6 +21,7 @@ class MatchedArticle {
     required this.description,
     required this.keywords,
     required this.fetchedAt,
+    this.source = '연합뉴스',
   });
 
   MatchedArticle copyWith({List<String>? keywords}) {
@@ -30,6 +33,7 @@ class MatchedArticle {
       description: description,
       keywords: keywords ?? this.keywords,
       fetchedAt: fetchedAt,
+      source: source,
     );
   }
 
@@ -45,6 +49,8 @@ class MatchedArticle {
               .map((e) => e as String)
               .toList(),
       fetchedAt: DateTime.parse(json['fetchedAt'] as String),
+      // source 필드가 없던 시절에 저장된 기사는 연합뉴스로 본다.
+      source: json['source'] as String? ?? '연합뉴스',
     );
   }
 
@@ -57,6 +63,7 @@ class MatchedArticle {
       'description': description,
       'keywords': keywords,
       'fetchedAt': fetchedAt.toIso8601String(),
+      'source': source,
     };
   }
 }

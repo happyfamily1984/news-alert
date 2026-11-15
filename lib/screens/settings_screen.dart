@@ -148,6 +148,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                   const SizedBox(height: 28),
+                  _SectionTitle(title: '뉴스 출처', brightness: brightness),
+                  const SizedBox(height: 16),
+                  _SettingsCard(
+                    brightness: brightness,
+                    children: [
+                      _SwitchRow(
+                        icon: Icons.newspaper_outlined,
+                        title: '연합뉴스',
+                        subtitle: '연합뉴스 RSS에서 뉴스를 가져옵니다',
+                        value: settings.enabledSources.contains('연합뉴스'),
+                        onChanged:
+                            _canTurnOff(settings, '연합뉴스')
+                                ? (v) => settings.setSourceEnabled(
+                                  '연합뉴스',
+                                  v,
+                                )
+                                : null,
+                      ),
+                      const _Divider(),
+                      _SwitchRow(
+                        icon: Icons.tv,
+                        title: 'YTN',
+                        subtitle: 'YTN RSS에서 뉴스를 가져옵니다',
+                        value: settings.enabledSources.contains('YTN'),
+                        onChanged:
+                            _canTurnOff(settings, 'YTN')
+                                ? (v) =>
+                                    settings.setSourceEnabled('YTN', v)
+                                : null,
+                      ),
+                      const _Divider(),
+                      _SwitchRow(
+                        icon: Icons.tv,
+                        title: 'MBC',
+                        subtitle: 'MBC 뉴스 RSS에서 뉴스를 가져옵니다',
+                        value: settings.enabledSources.contains('MBC'),
+                        onChanged:
+                            _canTurnOff(settings, 'MBC')
+                                ? (v) =>
+                                    settings.setSourceEnabled('MBC', v)
+                                : null,
+                      ),
+                      const _Divider(),
+                      _SwitchRow(
+                        icon: Icons.tv,
+                        title: 'KBS',
+                        subtitle: 'KBS 뉴스 RSS에서 뉴스를 가져옵니다',
+                        value: settings.enabledSources.contains('KBS'),
+                        onChanged:
+                            _canTurnOff(settings, 'KBS')
+                                ? (v) =>
+                                    settings.setSourceEnabled('KBS', v)
+                                : null,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
                   _SectionTitle(title: '앱 설정', brightness: brightness),
                   const SizedBox(height: 16),
                   _SettingsCard(
@@ -169,12 +226,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const _Divider(),
                       const _InfoRow(
-                        icon: Icons.rss_feed,
-                        title: 'RSS 출처',
-                        value: '연합뉴스',
-                      ),
-                      const _Divider(),
-                      const _InfoRow(
                         icon: Icons.info_outlined,
                         title: '앱 버전',
                         value: '1.0.0',
@@ -189,6 +240,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ],
     );
   }
+}
+
+/// 켜진 출처가 이 하나뿐이면 끌 수 없게 (전부 끄면 뉴스를 못 가져온다).
+/// 꺼진 출처는 언제든 다시 켤 수 있다.
+bool _canTurnOff(SettingsController settings, String source) {
+  if (!settings.enabledSources.contains(source)) return true;
+  return settings.enabledSources.length > 1;
 }
 
 /// 파란 세로 막대 + 굵은 제목.
@@ -282,7 +340,7 @@ class _SwitchRow extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool value;
-  final ValueChanged<bool> onChanged;
+  final ValueChanged<bool>? onChanged;
 
   const _SwitchRow({
     required this.icon,
