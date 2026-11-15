@@ -1,0 +1,29 @@
+name: news_alarm
+description: "키워드 기반 연합뉴스 알림 앱"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.0
+  flutter: ">=3.32.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  http: ^1.4.0
+  xml: ^6.6.1
+  shared_preferences: ^2.5.2
+  flutter_local_notifications: ^18.0.1
+  workmanager: ^0.9.0
+  url_launcher: ^6.3.1
+  google_fonts: ^6.2.1
+  share_plus: ^10.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
