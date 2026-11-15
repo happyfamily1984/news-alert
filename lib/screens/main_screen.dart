@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/notification_service.dart';
 import '../services/settings_controller.dart';
 import '../theme.dart';
 import '../widgets/app_bottom_navigation.dart';
@@ -23,6 +24,16 @@ class _MainScreenState extends State<MainScreen> {
   int _index = 0;
   int _newsRefreshSignal = 0;
   final _homeKey = GlobalKey<HomeScreenState>();
+
+  @override
+  void initState() {
+    super.initState();
+    // 첫 프레임이 그려진 뒤에 알림 권한 요청. 시작 전에 요청하면
+    // 권한 창 결과가 안 돌아오고 스플래시에서 멈출 수 있다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService.instance.requestPermission();
+    });
+  }
 
   void _onTab(int index) {
     setState(() {

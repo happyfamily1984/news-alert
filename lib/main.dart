@@ -11,14 +11,22 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final settings = SettingsController();
-  await settings.load();
+  // 시작 전 초기화는 어느 하나가 실패해도 앱이 뜨도록 각각 감싼다.
+  // 하나라도 던지면 runApp()에 못 가고 스플래시에서 멈춘다.
+  try {
+    await settings.load();
+  } catch (_) {}
+  try {
+    await NotificationService.instance.ensureInitialized();
+  } catch (_) {}
+  try {
+    await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+    await registerPeriodicCheck();
+  } catch (_) {}
 
-  await NotificationService.instance.ensureInitialized();
-  await NotificationService.instance.requestPermission();
-
-  await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
-  await registerPeriodicCheck();
-
+  // 알림 권한은 여기서 요청하지 않는다. 첫 화면이 그려지기 전에
+  // 권한 창을 띄우면 결과가 안 돌아오고 스플래시에서 멈출 수 있다.
+  // MainScreen이 첫 프레임 뒤에 요청한다.
   runApp(NewsAlarmApp(settings: settings));
 }
 
