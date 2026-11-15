@@ -25,5 +25,12 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
 
+# workmanager 0.9.2 조합의 버전 불일치(workmanager_apple 0.9.4가
+# foregroundServiceConfig 미구현) 우회: 인터페이스와 안드로이드
+# 구현체를 foregroundServiceConfig 도입 전 버전으로 고정.
+dependency_overrides:
+  workmanager_android: 0.9.2
+  workmanager_platform_interface: 0.9.3
+
 flutter:
   uses-material-design: true
