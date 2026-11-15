@@ -27,6 +27,7 @@ class ArticleDetailScreen extends StatelessWidget {
     final brightness = Theme.of(context).brightness;
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 60,
         backgroundColor: AppColors.surface(brightness),
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -45,17 +46,19 @@ class ArticleDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('연합뉴스', style: AppTextStyles.source(brightness)),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               formatArticleTime(article.pubDate),
-              style: AppTextStyles.meta(brightness),
+              style: AppTextStyles.meta(
+                brightness,
+              ).copyWith(fontSize: 14),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 22),
             SelectableText(
               article.title,
               style: AppTextStyles.articleTitle(brightness),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -80,7 +83,7 @@ class ArticleDetailScreen extends StatelessWidget {
                       )
                       .toList(),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
             SelectableText(
               article.description.isEmpty
                   ? '요약 내용이 없습니다. 원문 보기 버튼으로 기사를 확인해 주세요.'
@@ -102,7 +105,9 @@ class ArticleDetailScreen extends StatelessWidget {
                   backgroundColor: AppColors.primary(brightness),
                   foregroundColor: AppColors.onPrimary(brightness),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+                    borderRadius: BorderRadius.circular(
+                      AppSizes.buttonRadius,
+                    ),
                   ),
                 ),
                 child: Text(

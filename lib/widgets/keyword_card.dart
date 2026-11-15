@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 
-/// 홈 화면의 키워드 카드 (높이 76dp, 모서리 14dp).
-/// 키워드 16sp + 오늘 매칭 건수 14sp Primary 색.
+/// 홈 화면의 키워드 카드 (높이 84dp, 모서리 18dp).
+/// 키워드 17sp Bold + 오늘 매칭 건수 15sp Medium Primary 색.
 class KeywordCard extends StatelessWidget {
   final String keyword;
   final int todayCount;
@@ -32,7 +32,7 @@ class KeywordCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
               Expanded(
@@ -42,7 +42,9 @@ class KeywordCard extends StatelessWidget {
                   children: [
                     Text(
                       keyword,
-                      style: AppTextStyles.cardTitle(brightness),
+                      style: AppTextStyles.cardTitle(
+                        brightness,
+                      ).copyWith(fontWeight: FontWeight.w700),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -56,12 +58,13 @@ class KeywordCard extends StatelessWidget {
               ),
               IconButton(
                 onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline),
+                icon: const Icon(Icons.delete_outline, size: 22),
                 color: AppColors.textSecondary(brightness),
                 tooltip: '키워드 삭제',
               ),
               Icon(
                 Icons.chevron_right,
+                size: 22,
                 color: AppColors.textSecondary(brightness),
               ),
             ],

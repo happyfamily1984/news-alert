@@ -22,12 +22,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _testNotification() async {
     if (_testing) return;
     setState(() => _testing = true);
-    await NotificationService.instance.showTestNotification();
-    if (!mounted) return;
-    setState(() => _testing = false);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('테스트 알림을 보냈습니다.')));
+    try {
+      // 알림 권한이 꺼져 있으면 보내도 안 뜨니 먼저 확인하고, 꺼져 있으면
+      // 권한 요청을 한 번 더 띄운다.
+      var enabled =
+          await NotificationService.instance.areNotificationsEnabled();
+      if (!enabled) {
+        await NotificationService.instance.requestPermission();
+        enabled = await NotificationService.instance.areNotificationsEnabled();
+      }
+      if (!enabled) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              '알림 권한이 꺼져 있어요. 폰 설정 > 앱 > 뉴스 알리미 > 알림에서 켜주세요.',
+            ),
+          ),
+        );
+        return;
+      }
+      // 보내기가 끝나지 않고 멈추는 경우에도 빙글빙글만 돌지 않게 시간 제한을 둔다.
+      await NotificationService.instance
+          .showTestNotification()
+          .timeout(const Duration(seconds: 10));
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('테스트 알림을 보냈습니다.')));
+    } catch (e) {
+      // 보내기가 실패해도 원인을 보여주고 멈춘다. 예전 코드는 여기서
+      // 예외가 나면 로딩 상태가 그대로 남아 빙글빙글만 돌았다.
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('알림을 보내지 못했어요: $e')));
+    } finally {
+      if (mounted) setState(() => _testing = false);
+    }
   }
 
   @override
@@ -48,7 +80,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.all(AppSizes.pagePadding),
             children: [
               Text('알림 설정', style: AppTextStyles.groupTitle(brightness)),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
               _SettingsCard(
                 brightness: brightness,
                 children: [
@@ -99,7 +131,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(height: 24),
               Text('앱 설정', style: AppTextStyles.groupTitle(brightness)),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
               _SettingsCard(
                 brightness: brightness,
                 children: [
@@ -157,7 +189,7 @@ class _Divider extends StatelessWidget {
     final brightness = Theme.of(context).brightness;
     return Container(
       height: 1,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       color: AppColors.border(brightness),
     );
   }
@@ -185,14 +217,14 @@ class _SwitchRow extends StatelessWidget {
         children: [
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(left: 16),
+              padding: const EdgeInsets.only(left: 20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppTextStyles.body(brightness)),
+                  Text(title, style: AppTextStyles.settingsName(brightness)),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: AppTextStyles.caption(brightness)),
+                  Text(subtitle, style: AppTextStyles.settingsDesc(brightness)),
                 ],
               ),
             ),
@@ -202,7 +234,7 @@ class _SwitchRow extends StatelessWidget {
             onChanged: onChanged,
             activeColor: AppColors.primary(brightness),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 20),
         ],
       ),
     );
@@ -233,14 +265,14 @@ class _DropdownRow<T> extends StatelessWidget {
         children: [
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(left: 16),
+              padding: const EdgeInsets.only(left: 20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppTextStyles.body(brightness)),
+                  Text(title, style: AppTextStyles.settingsName(brightness)),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: AppTextStyles.caption(brightness)),
+                  Text(subtitle, style: AppTextStyles.settingsDesc(brightness)),
                 ],
               ),
             ),
@@ -264,7 +296,7 @@ class _DropdownRow<T> extends StatelessWidget {
                     .toList(),
             onChanged: onChanged,
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 20),
         ],
       ),
     );
@@ -295,20 +327,20 @@ class _ActionRow extends StatelessWidget {
           children: [
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(left: 16),
+                padding: const EdgeInsets.only(left: 20),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: AppTextStyles.body(brightness)),
+                    Text(title, style: AppTextStyles.settingsName(brightness)),
                     const SizedBox(height: 2),
-                    Text(subtitle, style: AppTextStyles.caption(brightness)),
+                    Text(subtitle, style: AppTextStyles.settingsDesc(brightness)),
                   ],
                 ),
               ),
             ),
             trailing,
-            const SizedBox(width: 16),
+            const SizedBox(width: 20),
           ],
         ),
       ),
@@ -328,11 +360,11 @@ class _InfoRow extends StatelessWidget {
     return SizedBox(
       height: AppSizes.settingsRowHeight,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(
           children: [
             Expanded(
-              child: Text(title, style: AppTextStyles.body(brightness)),
+              child: Text(title, style: AppTextStyles.settingsName(brightness)),
             ),
             Text(
               value,

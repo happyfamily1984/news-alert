@@ -10,8 +10,8 @@ import '../widgets/keyword_card.dart';
 import 'news_list_screen.dart';
 
 /// 화면 ① 홈 (키워드 목록).
-/// 상단 앱바(60dp), 오늘의 뉴스 요약 카드(112dp, Primary 배경),
-/// 키워드 카드 목록(76dp), 오른쪽 상단 마지막 RSS 확인 시간,
+/// 상단 앱바(64dp), 오늘의 뉴스 요약 카드(최소 148dp, Primary 배경),
+/// 키워드 카드 목록(84dp), 오른쪽 상단 마지막 RSS 확인 시간,
 /// 키워드 추가는 우측 하단 플로팅 버튼.
 class HomeScreen extends StatefulWidget {
   final SettingsController settings;
@@ -180,12 +180,12 @@ class HomeScreenState extends State<HomeScreen> {
               todayTotal: _todayTotal,
               keywordCount: _keywords.length,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
             Align(
               alignment: Alignment.centerRight,
               child: Text(
                 formatLastCheck(_lastCheck),
-                style: AppTextStyles.caption(brightness),
+                style: AppTextStyles.meta(brightness),
               ),
             ),
             const SizedBox(height: 12),
@@ -194,7 +194,7 @@ class HomeScreenState extends State<HomeScreen> {
             else
               ..._keywords.map(
                 (keyword) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.only(bottom: 16),
                   child: KeywordCard(
                     keyword: keyword,
                     todayCount: _todayCount(keyword),
@@ -228,7 +228,9 @@ class HomeScreenState extends State<HomeScreen> {
                   backgroundColor: AppColors.primary(brightness),
                   foregroundColor: AppColors.onPrimary(brightness),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+                    borderRadius: BorderRadius.circular(
+                      AppSizes.buttonRadius,
+                    ),
                   ),
                 ),
               ),
@@ -250,11 +252,14 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     return Container(
-      height: AppSizes.summaryCardHeight,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      // 고정 높이 대신 최소 높이: 콘텐츠가 늘어나도 글자가 잘리지 않는다.
+      constraints: const BoxConstraints(
+        minHeight: AppSizes.summaryCardMinHeight,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: BoxDecoration(
         color: AppColors.primary(brightness),
-        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
@@ -262,17 +267,18 @@ class _SummaryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   '오늘의 매칭 뉴스',
                   style: AppTextStyles.summaryLabel(brightness),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 8),
                 Text(
                   '$todayTotal건',
                   style: AppTextStyles.summaryCount(brightness),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   '키워드 $keywordCount개 모니터링 중',
                   style: AppTextStyles.summarySub(brightness),
@@ -280,7 +286,11 @@ class _SummaryCard extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.newspaper, color: Colors.white54, size: 44),
+          const Icon(
+            Icons.newspaper,
+            color: AppColors.summaryIconLight,
+            size: 52,
+          ),
         ],
       ),
     );
@@ -331,7 +341,9 @@ class _EmptyKeywords extends StatelessWidget {
                 backgroundColor: AppColors.primary(brightness),
                 foregroundColor: AppColors.onPrimary(brightness),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+                  borderRadius: BorderRadius.circular(
+                    AppSizes.buttonRadius,
+                  ),
                 ),
               ),
               child: Text(

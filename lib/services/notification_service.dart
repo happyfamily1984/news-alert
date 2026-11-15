@@ -44,6 +44,15 @@ class NotificationService {
     await android?.requestNotificationsPermission();
   }
 
+  /// 알림 권한이 허용돼 있는지 확인. 꺼져 있으면 알림을 보내도 안 뜬다.
+  Future<bool> areNotificationsEnabled() async {
+    final android =
+        _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    return await android?.areNotificationsEnabled() ?? false;
+  }
+
   Future<void> showNewsNotification({
     required int id,
     required String title,

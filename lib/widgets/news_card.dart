@@ -5,8 +5,9 @@ import '../theme.dart';
 import '../utils/date_format.dart';
 
 /// 매칭 뉴스 목록의 뉴스 카드.
-/// 기사 제목 16sp, 매칭 키워드는 제목 안에서 노란 배경으로 강조,
-/// 출처·시간 12sp, 새 뉴스는 초록 표시, 구분선은 목록에서 간격으로 처리한다.
+/// 기사 제목 17sp SemiBold (줄 간격 1.4), 매칭 키워드는 제목 안에서 노란 배경으로 강조,
+/// 키워드 태그는 작은 캡슐(높이 30dp), 출처·시간 13sp,
+/// 새 뉴스는 카드 오른쪽 상단 배지.
 class NewsCard extends StatelessWidget {
   final MatchedArticle article;
   final bool isRead;
@@ -32,31 +33,28 @@ class NewsCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: RichText(
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      text: TextSpan(
-                        children: _highlightSpans(
-                          article.title,
-                          article.keywords,
-                          brightness,
-                        ),
-                      ),
-                    ),
+              // 새 뉴스 배지는 제목 옆이 아니라 카드 오른쪽 상단에 따로 배치.
+              if (!isRead) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [_NewBadge(brightness: brightness)],
+                ),
+                const SizedBox(height: 6),
+              ],
+              RichText(
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                text: TextSpan(
+                  children: _highlightSpans(
+                    article.title,
+                    article.keywords,
+                    brightness,
                   ),
-                  if (!isRead) ...[
-                    const SizedBox(width: 8),
-                    _NewBadge(brightness: brightness),
-                  ],
-                ],
+                ),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -91,7 +89,9 @@ class NewsCard extends StatelessWidget {
     List<String> keywords,
     Brightness brightness,
   ) {
-    final baseStyle = AppTextStyles.cardTitle(brightness);
+    final baseStyle = AppTextStyles.cardTitle(
+      brightness,
+    ).copyWith(height: 1.4);
     final highlightStyle = baseStyle.copyWith(
       backgroundColor: AppColors.highlight(brightness),
     );

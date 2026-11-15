@@ -48,6 +48,7 @@ class _AddKeywordScreenState extends State<AddKeywordScreen> {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: AppColors.surface(brightness),
         elevation: 0,
@@ -57,86 +58,120 @@ class _AddKeywordScreenState extends State<AddKeywordScreen> {
           style: AppTextStyles.screenTitle(brightness),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(AppSizes.pagePadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '관심 있는 뉴스 키워드를 등록해 보세요.',
-              style: AppTextStyles.body(
-                brightness,
-              ).copyWith(color: AppColors.textSecondary(brightness)),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _controller,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _submit(),
-              onChanged: (_) {
-                if (_error != null) setState(() => _error = null);
-              },
-              decoration: InputDecoration(
-                hintText: '예) 인공지능, 부동산, 전기차',
-                hintStyle: AppTextStyles.body(
-                  brightness,
-                ).copyWith(color: AppColors.textSecondary(brightness)),
-                errorText: _error,
-                filled: true,
-                fillColor: AppColors.inputFill(brightness),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 18,
+      // SingleChildScrollView + SafeArea: 작은 화면이나 키보드가 올라와도
+      // 하단 안내 문구가 잘리지 않는다.
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - 52,
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-                  borderSide: BorderSide(
-                    color: AppColors.inputBorder(brightness),
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-                  borderSide: BorderSide(
-                    color: AppColors.inputBorder(brightness),
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-                  borderSide: BorderSide(
-                    color: AppColors.primary(brightness),
-                    width: 1.5,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '관심 있는 뉴스 키워드를 등록해 보세요.',
+                      style: AppTextStyles.body(
+                        brightness,
+                      ).copyWith(
+                        fontSize: 16,
+                        color: AppColors.textSecondary(brightness),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: _controller,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _submit(),
+                      onChanged: (_) {
+                        if (_error != null) {
+                          setState(() => _error = null);
+                        }
+                      },
+                      style: AppTextStyles.body(
+                        brightness,
+                      ).copyWith(fontSize: 16),
+                      decoration: InputDecoration(
+                          hintText: '예) 인공지능, 부동산, 전기차',
+                          hintStyle: AppTextStyles.body(
+                            brightness,
+                          ).copyWith(
+                            fontSize: 16,
+                            color: AppColors.textSecondary(brightness),
+                          ),
+                          errorText: _error,
+                          filled: true,
+                          fillColor: AppColors.inputFill(brightness),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 20,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.buttonRadius,
+                            ),
+                            borderSide: BorderSide(
+                              color: AppColors.inputBorder(brightness),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.buttonRadius,
+                            ),
+                            borderSide: BorderSide(
+                              color: AppColors.inputBorder(brightness),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.buttonRadius,
+                            ),
+                            borderSide: BorderSide(
+                              color: AppColors.primary(brightness),
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      height: AppSizes.buttonHeight,
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _saving ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary(brightness),
+                          foregroundColor: AppColors.onPrimary(brightness),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.buttonRadius,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          '등록하기',
+                          style: AppTextStyles.button(brightness),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Center(
+                      child: Text(
+                        '연합뉴스 RSS에서 해당 키워드가 포함된 뉴스를 확인합니다.',
+                        style: AppTextStyles.meta(
+                          brightness,
+                        ).copyWith(fontSize: 12, height: 1.5),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: AppSizes.buttonHeight,
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _saving ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary(brightness),
-                  foregroundColor: AppColors.onPrimary(brightness),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-                  ),
-                ),
-                child: Text(
-                  '등록하기',
-                  style: AppTextStyles.button(brightness),
-                ),
-              ),
-            ),
-            const Spacer(),
-            Center(
-              child: Text(
-                '연합뉴스 RSS에서 해당 키워드가 포함된 뉴스를 확인합니다.',
-                style: AppTextStyles.caption(brightness),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

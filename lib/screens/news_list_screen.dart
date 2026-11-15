@@ -151,7 +151,7 @@ class _NewsListScreenState extends State<NewsListScreen> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(AppSizes.pagePadding),
                   itemCount: visible.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  separatorBuilder: (_, _) => const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     final article = visible[index];
                     return NewsCard(
