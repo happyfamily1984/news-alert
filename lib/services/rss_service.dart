@@ -28,6 +28,9 @@ class FeedSource {
   final String url;
   final String? titleSuffix;
 
+  /// 구글 뉴스 RSS 경유 피드인지 여부.
+  bool get viaGoogleNews => titleSuffix != null;
+
   const FeedSource(this.name, this.url, [this.titleSuffix]);
 }
 
@@ -38,6 +41,8 @@ class FeedSource {
 /// 가져온다. 직접 피드는 2026-11-15에 확인했더니 MBC·KBS는 404 오류 페이지,
 /// YTN은 홈페이지로 리디렉션이라 쓸 수 없었다. 구글 뉴스 RSS는 3곳 모두
 /// RSS 2.0 정상 확인됨.
+/// 구글 뉴스 검색은 최신순이 아니라서 'when:1d'(최근 하루)를 붙여
+/// 며칠 지난 기사가 새 뉴스로 잡히지 않게 한다 (2026-11-20 응답 확인).
 class RssService {
   static const List<FeedSource> feeds = [
     // 연합뉴스 (직접 피드): 전체·정치·경제·사회·국제·문화·스포츠·산업·연예·지역.
@@ -54,17 +59,17 @@ class RssService {
     // YTN·MBC·KBS (구글 뉴스 RSS).
     FeedSource(
       'YTN',
-      'https://news.google.com/rss/search?q=site:ytn.co.kr&hl=ko&gl=KR&ceid=KR:ko',
+      'https://news.google.com/rss/search?q=site:ytn.co.kr+when:1d&hl=ko&gl=KR&ceid=KR:ko',
       ' - YTN',
     ),
     FeedSource(
       'MBC',
-      'https://news.google.com/rss/search?q=site:imnews.imbc.com&hl=ko&gl=KR&ceid=KR:ko',
+      'https://news.google.com/rss/search?q=site:imnews.imbc.com+when:1d&hl=ko&gl=KR&ceid=KR:ko',
       ' - MBC 뉴스',
     ),
     FeedSource(
       'KBS',
-      'https://news.google.com/rss/search?q=site:news.kbs.co.kr&hl=ko&gl=KR&ceid=KR:ko',
+      'https://news.google.com/rss/search?q=site:news.kbs.co.kr+when:1d&hl=ko&gl=KR&ceid=KR:ko',
       ' - KBS 뉴스',
     ),
   ];
@@ -91,14 +96,17 @@ class RssService {
         title = title.substring(0, title.length - suffix.length).trim();
       }
       final link = item.getElement('link')?.innerText.trim() ?? '';
-      final guid =
-          item.getElement('guid')?.innerText.trim() ?? link;
+      final guid = item.getElement('guid')?.innerText.trim() ?? link;
       final pubDateRaw = item.getElement('pubDate')?.innerText.trim() ?? '';
-      final description = _stripTags(
-        _decodeEntities(
-          item.getElement('description')?.innerText.trim() ?? '',
-        ),
-      );
+      // 구글 뉴스 RSS의 description은 요약이 아니라 '제목 + 언론사' 링크라서
+      // 비워 둔다 (상세 화면에서 제목이 두 번 나오지 않게).
+      final description = feed.viaGoogleNews
+          ? ''
+          : _stripTags(
+              _decodeEntities(
+                item.getElement('description')?.innerText.trim() ?? '',
+              ),
+            );
       if (title.isEmpty || link.isEmpty) continue;
 
       DateTime pubDate;

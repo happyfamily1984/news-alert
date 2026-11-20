@@ -56,17 +56,13 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   bool _isToday(DateTime dt, DateTime now) {
-    return dt.year == now.year &&
-        dt.month == now.month &&
-        dt.day == now.day;
+    return dt.year == now.year && dt.month == now.month && dt.day == now.day;
   }
 
   int _todayCount(String keyword) {
     final now = DateTime.now();
     return _articles
-        .where(
-          (a) => a.keywords.contains(keyword) && _isToday(a.pubDate, now),
-        )
+        .where((a) => a.keywords.contains(keyword) && _isToday(a.pubDate, now))
         .length;
   }
 
@@ -85,12 +81,26 @@ class HomeScreenState extends State<HomeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            fresh.isEmpty
-                ? '새로운 뉴스가 없습니다.'
-                : '새 뉴스 ${fresh.length}건을 찾았습니다.',
+            fresh.isEmpty ? '새로운 뉴스가 없습니다.' : '새 뉴스 ${fresh.length}건을 찾았습니다.',
           ),
         ),
       );
+    } finally {
+      if (mounted) setState(() => _checking = false);
+    }
+  }
+
+  /// 키워드를 새로 등록한 직후에 알림 없이 한 번 확인한다.
+  /// 이미 올라와 있던 기사를 목록에만 채워 넣어서, 다음 확인 때
+  /// 옛 기사가 '새 뉴스'로 한꺼번에 알림 오는 것을 막는다.
+  Future<void> checkSilently() async {
+    if (_checking) return;
+    setState(() => _checking = true);
+    try {
+      await NewsCheckService.instance.runCheck(notify: false);
+      await reload();
+    } catch (_) {
+      // 네트워크 실패 등은 조용히 넘긴다. 다음 주기 확인에서 다시 시도된다.
     } finally {
       if (mounted) setState(() => _checking = false);
     }
@@ -100,38 +110,34 @@ class HomeScreenState extends State<HomeScreen> {
     final brightness = Theme.of(context).brightness;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            backgroundColor: AppColors.surface(brightness),
-            title: Text(
-              '키워드 삭제',
-              style: AppTextStyles.cardTitle(brightness),
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface(brightness),
+        title: Text('키워드 삭제', style: AppTextStyles.cardTitle(brightness)),
+        content: Text(
+          '‘$keyword’ 키워드를 삭제할까요?',
+          style: AppTextStyles.body(brightness),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              '취소',
+              style: AppTextStyles.body(
+                brightness,
+              ).copyWith(color: AppColors.textSecondary(brightness)),
             ),
-            content: Text(
-              '‘$keyword’ 키워드를 삭제할까요?',
-              style: AppTextStyles.body(brightness),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(
-                  '취소',
-                  style: AppTextStyles.body(
-                    brightness,
-                  ).copyWith(color: AppColors.textSecondary(brightness)),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(
-                  '삭제',
-                  style: AppTextStyles.body(
-                    brightness,
-                  ).copyWith(color: AppColors.error(brightness)),
-                ),
-              ),
-            ],
           ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              '삭제',
+              style: AppTextStyles.body(
+                brightness,
+              ).copyWith(color: AppColors.error(brightness)),
+            ),
+          ),
+        ],
+      ),
     );
     if (confirmed == true) {
       await StorageService.instance.removeKeyword(keyword);
@@ -146,9 +152,7 @@ class HomeScreenState extends State<HomeScreen> {
   void _openKeywordNews(String keyword) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => NewsListScreen(filterKeyword: keyword),
-      ),
+      MaterialPageRoute(builder: (_) => NewsListScreen(filterKeyword: keyword)),
     );
   }
 
@@ -182,10 +186,7 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Text(
-                  '뉴스 알리미',
-                  style: AppTextStyles.appTitle(brightness),
-                ),
+                Text('뉴스 알리미', style: AppTextStyles.appTitle(brightness)),
               ],
             ),
             actions: [
@@ -460,10 +461,7 @@ class _EmptyKeywords extends StatelessWidget {
             fit: BoxFit.contain,
           ),
           const SizedBox(height: 16),
-          Text(
-            '아직 등록된 키워드가 없습니다',
-            style: AppTextStyles.emptyTitle(brightness),
-          ),
+          Text('아직 등록된 키워드가 없습니다', style: AppTextStyles.emptyTitle(brightness)),
           const SizedBox(height: 8),
           Text(
             '관심 있는 키워드를 등록하면\n관련 뉴스를 알림으로 받아볼 수 있어요!',
@@ -471,11 +469,7 @@ class _EmptyKeywords extends StatelessWidget {
             style: AppTextStyles.heroSubtitle(brightness),
           ),
           const SizedBox(height: 20),
-          GradientButton(
-            label: '키워드 추가하기',
-            icon: Icons.add,
-            onPressed: onAdd,
-          ),
+          GradientButton(label: '키워드 추가하기', icon: Icons.add, onPressed: onAdd),
         ],
       ),
     );

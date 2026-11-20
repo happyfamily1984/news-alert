@@ -45,13 +45,11 @@ class ArticleDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('연합뉴스', style: AppTextStyles.source(brightness)),
+            Text(article.source, style: AppTextStyles.source(brightness)),
             const SizedBox(height: 6),
             Text(
               formatArticleTime(article.pubDate),
-              style: AppTextStyles.meta(
-                brightness,
-              ).copyWith(fontSize: 14),
+              style: AppTextStyles.meta(brightness).copyWith(fontSize: 14),
             ),
             const SizedBox(height: 22),
             SelectableText(
@@ -62,26 +60,25 @@ class ArticleDetailScreen extends StatelessWidget {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children:
-                  article.keywords
-                      .map(
-                        (keyword) => Container(
-                          height: AppSizes.keywordTagHeight,
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: AppColors.tagBackground(brightness),
-                            borderRadius: BorderRadius.circular(
-                              AppSizes.keywordTagHeight / 2,
-                            ),
-                          ),
-                          child: Text(
-                            keyword,
-                            style: AppTextStyles.tag(brightness),
-                          ),
+              children: article.keywords
+                  .map(
+                    (keyword) => Container(
+                      height: AppSizes.keywordTagHeight,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppColors.tagBackground(brightness),
+                        borderRadius: BorderRadius.circular(
+                          AppSizes.keywordTagHeight / 2,
                         ),
-                      )
-                      .toList(),
+                      ),
+                      child: Text(
+                        keyword,
+                        style: AppTextStyles.tag(brightness),
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
             const SizedBox(height: 18),
             SelectableText(
@@ -90,11 +87,13 @@ class ArticleDetailScreen extends StatelessWidget {
                   : article.description,
               style: AppTextStyles.articleBody(brightness),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'RSS 요약 내용입니다. 전문은 원문에서 확인하세요.',
-              style: AppTextStyles.caption(brightness),
-            ),
+            if (article.description.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'RSS 요약 내용입니다. 전문은 원문에서 확인하세요.',
+                style: AppTextStyles.caption(brightness),
+              ),
+            ],
             const SizedBox(height: 24),
             SizedBox(
               height: AppSizes.buttonHeight,
@@ -105,15 +104,10 @@ class ArticleDetailScreen extends StatelessWidget {
                   backgroundColor: AppColors.primary(brightness),
                   foregroundColor: AppColors.onPrimary(brightness),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      AppSizes.buttonRadius,
-                    ),
+                    borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
                   ),
                 ),
-                child: Text(
-                  '원문 보기',
-                  style: AppTextStyles.button(brightness),
-                ),
+                child: Text('원문 보기', style: AppTextStyles.button(brightness)),
               ),
             ),
           ],

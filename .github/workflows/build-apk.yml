@@ -33,6 +33,13 @@ jobs:
           curl -fsSL -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v8.9.0/gradle/wrapper/gradle-wrapper.jar
           chmod +x gradlew
 
+      # 오류·경고가 있으면 빌드를 멈춘다 (안내 수준은 통과).
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Test
+        run: flutter test
+
       - name: Build release APK
         run: flutter build apk --release
 

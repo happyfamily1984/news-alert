@@ -12,8 +12,16 @@ class StorageService {
 
   SharedPreferences? _prefs;
 
+  /// SharedPreferences는 isolate마다 메모리 캐시를 따로 둔다.
+  /// 백그라운드 작업(WorkManager)과 앱 화면이 서로 다른 isolate라서,
+  /// 매번 reload()로 디스크 값을 다시 읽지 않으면 상대가 저장한 기사를
+  /// 못 보고 오래된 목록으로 덮어쓰게 된다.
   Future<SharedPreferences> get _store async {
-    return _prefs ??= await SharedPreferences.getInstance();
+    final prefs = _prefs ??= await SharedPreferences.getInstance();
+    try {
+      await prefs.reload();
+    } catch (_) {}
+    return prefs;
   }
 
   static const String _keywordsKey = 'keywords';
@@ -63,6 +71,20 @@ class StorageService {
     final keywords = prefs.getStringList(_keywordsKey) ?? <String>[];
     keywords.remove(keyword);
     await prefs.setStringList(_keywordsKey, keywords);
+
+    // 지운 키워드로만 매칭됐던 기사는 목록에서 빼고,
+    // 다른 키워드와도 매칭된 기사는 지운 키워드 태그만 뗀다.
+    final articles = await getArticles();
+    final kept = <MatchedArticle>[];
+    for (final article in articles) {
+      if (!article.keywords.contains(keyword)) {
+        kept.add(article);
+        continue;
+      }
+      final rest = article.keywords.where((k) => k != keyword).toList();
+      if (rest.isNotEmpty) kept.add(article.copyWith(keywords: rest));
+    }
+    await saveArticles(kept);
   }
 
   Future<List<MatchedArticle>> getArticles() async {
@@ -83,14 +105,23 @@ class StorageService {
 
   Future<void> saveArticles(List<MatchedArticle> articles) async {
     final prefs = await _store;
-    final capped =
-        articles.length > maxStoredArticles
-            ? articles.sublist(0, maxStoredArticles)
-            : articles;
+    final capped = articles.length > maxStoredArticles
+        ? articles.sublist(0, maxStoredArticles)
+        : articles;
     await prefs.setStringList(
       _articlesKey,
       capped.map((a) => jsonEncode(a.toJson())).toList(),
     );
+
+    // 목록에서 사라진 기사의 읽음 표시는 같이 지운다 (끝없이 쌓이지 않게).
+    final readIds = prefs.getStringList(_readIdsKey);
+    if (readIds != null && readIds.isNotEmpty) {
+      final alive = capped.map((a) => a.id).toSet();
+      final pruned = readIds.where(alive.contains).toList();
+      if (pruned.length != readIds.length) {
+        await prefs.setStringList(_readIdsKey, pruned);
+      }
+    }
   }
 
   Future<Set<String>> getReadIds() async {

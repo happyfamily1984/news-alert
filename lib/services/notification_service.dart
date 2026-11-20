@@ -23,10 +23,25 @@ class NotificationService {
     _initialized = true;
   }
 
-  static Future<void> _onNotificationTap(
-    NotificationResponse response,
-  ) async {
-    final payload = response.payload;
+  static Future<void> _onNotificationTap(NotificationResponse response) async {
+    await _openPayload(response.payload);
+  }
+
+  /// 앱이 꺼진 상태에서 알림을 눌러 앱이 켜진 경우, 그 알림의 기사를 연다.
+  /// 이 경우에는 onDidReceiveNotificationResponse가 불리지 않아서
+  /// 시작 직후에 직접 확인해야 한다. 한 번만 처리한다.
+  bool _launchHandled = false;
+
+  Future<void> handleLaunchNotification() async {
+    if (_launchHandled) return;
+    _launchHandled = true;
+    await ensureInitialized();
+    final details = await _plugin.getNotificationAppLaunchDetails();
+    if (details == null || !details.didNotificationLaunchApp) return;
+    await _openPayload(details.notificationResponse?.payload);
+  }
+
+  static Future<void> _openPayload(String? payload) async {
     if (payload == null || payload.isEmpty) return;
     final uri = Uri.tryParse(payload);
     if (uri == null) return;
@@ -37,8 +52,8 @@ class NotificationService {
 
   /// Android 13+ 알림 권한 요청. 이미 허용됐으면 아무 일도 안 한다.
   Future<void> requestPermission() async {
-    final android =
-        _plugin.resolvePlatformSpecificImplementation<
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
     await android?.requestNotificationsPermission();
@@ -46,8 +61,8 @@ class NotificationService {
 
   /// 알림 권한이 허용돼 있는지 확인. 꺼져 있으면 알림을 보내도 안 뜬다.
   Future<bool> areNotificationsEnabled() async {
-    final android =
-        _plugin.resolvePlatformSpecificImplementation<
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
     return await android?.areNotificationsEnabled() ?? false;

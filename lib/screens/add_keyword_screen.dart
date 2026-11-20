@@ -173,7 +173,7 @@ class _AddKeywordScreenState extends State<AddKeywordScreen> {
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(
-                                '연합뉴스 RSS에서 해당 키워드가 포함된 뉴스를 확인합니다.',
+                                '설정에서 켠 뉴스 출처에서 해당 키워드가 포함된 뉴스를 확인합니다.',
                                 style: AppTextStyles.meta(
                                   brightness,
                                 ).copyWith(fontSize: 13, height: 1.5),
