@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/battery_service.dart';
 import '../services/notification_service.dart';
+import '../services/rss_service.dart';
 import '../services/settings_controller.dart';
 import '../services/storage_service.dart';
 import '../theme.dart';
@@ -235,45 +236,21 @@ class _SettingsScreenState extends State<SettingsScreen>
                   _SettingsCard(
                     brightness: brightness,
                     children: [
-                      _SwitchRow(
-                        icon: Icons.newspaper_outlined,
-                        title: '연합뉴스',
-                        subtitle: '연합뉴스 RSS에서 뉴스를 가져옵니다',
-                        value: settings.enabledSources.contains('연합뉴스'),
-                        onChanged: _canTurnOff(settings, '연합뉴스')
-                            ? (v) => settings.setSourceEnabled('연합뉴스', v)
-                            : null,
-                      ),
-                      const _Divider(),
-                      _SwitchRow(
-                        icon: Icons.tv,
-                        title: 'YTN',
-                        subtitle: 'YTN RSS에서 뉴스를 가져옵니다',
-                        value: settings.enabledSources.contains('YTN'),
-                        onChanged: _canTurnOff(settings, 'YTN')
-                            ? (v) => settings.setSourceEnabled('YTN', v)
-                            : null,
-                      ),
-                      const _Divider(),
-                      _SwitchRow(
-                        icon: Icons.tv,
-                        title: 'MBC',
-                        subtitle: 'MBC 뉴스 RSS에서 뉴스를 가져옵니다',
-                        value: settings.enabledSources.contains('MBC'),
-                        onChanged: _canTurnOff(settings, 'MBC')
-                            ? (v) => settings.setSourceEnabled('MBC', v)
-                            : null,
-                      ),
-                      const _Divider(),
-                      _SwitchRow(
-                        icon: Icons.tv,
-                        title: 'KBS',
-                        subtitle: 'KBS 뉴스 RSS에서 뉴스를 가져옵니다',
-                        value: settings.enabledSources.contains('KBS'),
-                        onChanged: _canTurnOff(settings, 'KBS')
-                            ? (v) => settings.setSourceEnabled('KBS', v)
-                            : null,
-                      ),
+                      for (final (i, (name, desc))
+                          in RssService.sources.indexed) ...[
+                        if (i > 0) const _Divider(),
+                        _SwitchRow(
+                          icon: const {'YTN', 'MBC', 'KBS'}.contains(name)
+                              ? Icons.tv
+                              : Icons.newspaper_outlined,
+                          title: name,
+                          subtitle: desc,
+                          value: settings.enabledSources.contains(name),
+                          onChanged: _canTurnOff(settings, name)
+                              ? (v) => settings.setSourceEnabled(name, v)
+                              : null,
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 28),
@@ -300,7 +277,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                       const _InfoRow(
                         icon: Icons.info_outlined,
                         title: '앱 버전',
-                        value: '1.0.0 (15)',
+                        value: '1.0.0',
                       ),
                     ],
                   ),

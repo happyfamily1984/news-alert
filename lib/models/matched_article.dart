@@ -2,7 +2,7 @@
 ///
 /// [id]는 RSS guid(기사 고유 주소)이며 중복 제거 기준이다.
 /// [keywords]는 이 기사와 매칭된 키워드 목록이다 (여러 키워드 매칭 가능).
-/// [source]는 기사를 가져온 언론사 (연합뉴스 / YTN / MBC / KBS).
+/// [source]는 기사를 가져온 언론사 (RssService.sources 중 하나).
 class MatchedArticle {
   final String id;
   final String title;

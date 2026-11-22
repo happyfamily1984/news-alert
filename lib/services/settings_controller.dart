@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../background_task.dart';
+import 'rss_service.dart';
 import 'storage_service.dart';
 
 /// 설정 상태. SharedPreferences에 저장하고 ChangeNotifier로 화면에 알린다.
@@ -9,7 +10,7 @@ class SettingsController extends ChangeNotifier {
   bool notificationsEnabled = true;
   int checkIntervalMinutes = 15;
   bool notifyNewOnly = true;
-  Set<String> enabledSources = {'연합뉴스', 'YTN', 'MBC', 'KBS'};
+  Set<String> enabledSources = RssService.sourceNames;
 
   bool _loaded = false;
 

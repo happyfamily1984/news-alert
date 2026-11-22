@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/matched_article.dart';
+import 'rss_service.dart';
 
 /// 키워드·매칭 기사·설정을 SharedPreferences에 저장한다.
 class StorageService {
@@ -40,18 +41,35 @@ class StorageService {
   static const int maxStoredArticles = 100;
 
   /// 켜진 뉴스 출처 목록. 저장된 게 없으면 전부 켠 것으로 본다.
+  /// 앱 업데이트로 새로 생긴 출처(사용자가 본 적 없는 출처)는 켠 상태로 시작한다.
   Future<Set<String>> getEnabledSources() async {
     final prefs = await _store;
+    final all = RssService.sourceNames;
     final saved = prefs.getStringList(_sourcesKey);
-    if (saved == null) return _allSources;
-    return saved.toSet();
+    if (saved == null) return all;
+    final known =
+        prefs.getStringList(_knownSourcesKey)?.toSet() ?? _sourcesBeforeV16;
+    final added = all.difference(known);
+    final enabled = saved.toSet().intersection(all)..addAll(added);
+    if (added.isNotEmpty) {
+      await prefs.setStringList(_sourcesKey, enabled.toList());
+      await prefs.setStringList(_knownSourcesKey, all.toList());
+    }
+    return enabled.isEmpty ? all : enabled;
   }
 
-  static const Set<String> _allSources = {'연합뉴스', 'YTN', 'MBC', 'KBS'};
+  static const String _knownSourcesKey = 'known_sources';
+
+  /// 출처 목록을 기억하기 전(1.0.0+15까지) 버전에 있던 출처.
+  static const Set<String> _sourcesBeforeV16 = {'연합뉴스', 'YTN', 'MBC', 'KBS'};
 
   Future<void> setEnabledSources(Set<String> sources) async {
     final prefs = await _store;
     await prefs.setStringList(_sourcesKey, sources.toList());
+    await prefs.setStringList(
+      _knownSourcesKey,
+      RssService.sourceNames.toList(),
+    );
   }
 
   Future<List<String>> getKeywords() async {

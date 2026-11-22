@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -44,6 +45,19 @@ class FeedSource {
 /// 구글 뉴스 검색은 최신순이 아니라서 'when:1d'(최근 하루)를 붙여
 /// 며칠 지난 기사가 새 뉴스로 잡히지 않게 한다 (2026-11-20 응답 확인).
 class RssService {
+  /// 설정 화면에 보여줄 출처 순서와 설명.
+  static const List<(String, String)> sources = [
+    ('연합뉴스', '연합뉴스 RSS에서 뉴스를 가져옵니다'),
+    ('조선일보', '조선일보 RSS에서 뉴스를 가져옵니다'),
+    ('중앙일보', '구글 뉴스를 통해 중앙일보 뉴스를 가져옵니다'),
+    ('동아일보', '동아일보 RSS에서 뉴스를 가져옵니다'),
+    ('YTN', '구글 뉴스를 통해 YTN 뉴스를 가져옵니다'),
+    ('MBC', '구글 뉴스를 통해 MBC 뉴스를 가져옵니다'),
+    ('KBS', '구글 뉴스를 통해 KBS 뉴스를 가져옵니다'),
+  ];
+
+  static Set<String> get sourceNames => {for (final s in sources) s.$1};
+
   static const List<FeedSource> feeds = [
     // 연합뉴스 (직접 피드): 전체·정치·경제·사회·국제·문화·스포츠·산업·연예·지역.
     FeedSource('연합뉴스', 'https://www.yna.co.kr/rss/news.xml'),
@@ -56,6 +70,26 @@ class RssService {
     FeedSource('연합뉴스', 'https://www.yna.co.kr/rss/industry.xml'),
     FeedSource('연합뉴스', 'https://www.yna.co.kr/rss/entertainment.xml'),
     FeedSource('연합뉴스', 'https://www.yna.co.kr/rss/local.xml'),
+    // 조선일보 (직접 피드, 2026-11-22 확인): 전체 피드 하나가 100건,
+    // 약 5시간 분량이라 카테고리 피드 없이도 15~60분 주기에 충분하다.
+    FeedSource(
+      '조선일보',
+      'https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml',
+    ),
+    // 동아일보 (직접 피드, 2026-11-22 확인): 전체 피드가 50건뿐이라
+    // 주요 카테고리를 같이 받는다. 응답에 문자셋 표시가 없어 UTF-8로 직접 푼다.
+    FeedSource('동아일보', 'https://rss.donga.com/total.xml'),
+    FeedSource('동아일보', 'https://rss.donga.com/politics.xml'),
+    FeedSource('동아일보', 'https://rss.donga.com/economy.xml'),
+    FeedSource('동아일보', 'https://rss.donga.com/national.xml'),
+    FeedSource('동아일보', 'https://rss.donga.com/international.xml'),
+    // 중앙일보: 직접 피드가 없어졌다 (2026-11-22, joongang.co.kr/rss 404,
+    // rss.joins.com 접속 불가). 구글 뉴스 RSS로 가져온다.
+    FeedSource(
+      '중앙일보',
+      'https://news.google.com/rss/search?q=site:joongang.co.kr+when:1d&hl=ko&gl=KR&ceid=KR:ko',
+      ' - 중앙일보',
+    ),
     // YTN·MBC·KBS (구글 뉴스 RSS).
     FeedSource(
       'YTN',
@@ -83,7 +117,14 @@ class RssService {
         .timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) return <RssArticle>[];
 
-    final document = XmlDocument.parse(response.body);
+    // response.body는 응답 헤더에 문자셋이 없으면 latin1로 풀어서 한글이
+    // 깨진다 (동아일보). 국내 피드는 모두 UTF-8이라 바이트를 직접 푼다.
+    return parse(utf8.decode(response.bodyBytes, allowMalformed: true), feed);
+  }
+
+  /// RSS XML 본문을 기사 목록으로 바꾼다.
+  static List<RssArticle> parse(String body, FeedSource feed) {
+    final document = XmlDocument.parse(body);
     final articles = <RssArticle>[];
     for (final item in document.findAllElements('item')) {
       var title = _decodeEntities(
@@ -135,6 +176,7 @@ class RssService {
   /// CDATA 안에는 HTML 엔티티가 그대로 들어 있으므로 직접 푼다.
   static String _decodeEntities(String input) {
     return input
+        .replaceAll('&nbsp;', ' ')
         .replaceAll('&apos;', "'")
         .replaceAll('&#39;', "'")
         .replaceAll('&quot;', '"')
