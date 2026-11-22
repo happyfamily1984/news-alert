@@ -1,5 +1,9 @@
 name: Build APK
 
+# 직접 설치용 APK(공개 테스트 키 서명)는 항상 만들고,
+# 플레이스토어용 AAB는 업로드 키 시크릿(UPLOAD_KEYSTORE_BASE64 등)이
+# 등록돼 있을 때만 업로드 키로 서명해서 만든다.
+
 on:
   push:
     branches: [main]
@@ -8,6 +12,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      UPLOAD_KEYSTORE_BASE64: ${{ secrets.UPLOAD_KEYSTORE_BASE64 }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,4 +54,24 @@ jobs:
         with:
           name: news-alarm-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+
+      - name: Build Play Store AAB (upload key)
+        if: env.UPLOAD_KEYSTORE_BASE64 != ''
+        env:
+          NEWSALARM_UPLOAD_STORE_PASSWORD: ${{ secrets.UPLOAD_STORE_PASSWORD }}
+          NEWSALARM_UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+          NEWSALARM_UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+        run: |
+          echo "$UPLOAD_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload-keystore.p12"
+          export NEWSALARM_UPLOAD_KEYSTORE="$RUNNER_TEMP/upload-keystore.p12"
+          flutter build appbundle --release
+          rm -f "$RUNNER_TEMP/upload-keystore.p12"
+
+      - name: Upload AAB artifact
+        if: env.UPLOAD_KEYSTORE_BASE64 != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: news-alarm-play-aab
+          path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error

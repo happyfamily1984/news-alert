@@ -24,7 +24,7 @@ class BatteryService {
     }
   }
 
-  /// 시스템 '배터리 최적화 제외' 창을 띄운다. 창을 열었으면 true.
+  /// 이 앱의 '앱 정보' 화면을 연다 (배터리 → 제한 없음). 화면을 열었으면 true.
   Future<bool> requestIgnoreOptimizations() async {
     try {
       return await _channel.invokeMethod<bool>(

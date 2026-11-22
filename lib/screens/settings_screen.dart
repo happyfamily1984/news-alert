@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../services/battery_service.dart';
 import '../services/notification_service.dart';
@@ -274,6 +275,17 @@ class _SettingsScreenState extends State<SettingsScreen>
                         },
                       ),
                       const _Divider(),
+                      _ActionRow(
+                        icon: Icons.privacy_tip_outlined,
+                        title: '개인정보처리방침',
+                        subtitle: '수집하는 개인정보가 없습니다',
+                        trailing: const Icon(Icons.open_in_new),
+                        onTap: () => launchUrl(
+                          Uri.parse(kPrivacyPolicyUrl),
+                          mode: LaunchMode.externalApplication,
+                        ),
+                      ),
+                      const _Divider(),
                       const _InfoRow(
                         icon: Icons.info_outlined,
                         title: '앱 버전',
@@ -290,6 +302,10 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 }
+
+/// 플레이스토어 등록정보에도 같은 주소를 쓴다 (docs/privacy-policy.md).
+const String kPrivacyPolicyUrl =
+    'https://github.com/happyfamily1984/news-alert/blob/main/docs/privacy-policy.md';
 
 /// 켜진 출처가 이 하나뿐이면 끌 수 없게 (전부 끄면 뉴스를 못 가져온다).
 /// 꺼진 출처는 언제든 다시 켤 수 있다.

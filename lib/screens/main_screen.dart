@@ -62,7 +62,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         content: Text(
           '폰의 배터리 절약 기능 때문에 앱을 닫아 두면 뉴스 확인이 '
           '몇 시간씩 미뤄질 수 있어요.\n\n'
-          '다음 창에서 \'허용\'을 누르면 앱을 닫아도 알림이 제때 옵니다.',
+          '다음 화면에서 \'배터리\' → \'제한 없음\'을 선택하면 '
+          '앱을 닫아도 알림이 제때 옵니다.',
           style: AppTextStyles.body(brightness),
         ),
         actions: [

@@ -34,15 +34,14 @@ class MainActivity : FlutterActivity() {
         return pm.isIgnoringBatteryOptimizations(packageName)
     }
 
-    /// 시스템 '배터리 최적화 제외' 확인 창을 띄운다. 막힌 폰이면
-    /// 배터리 최적화 목록 화면을, 그것도 안 되면 앱 정보 화면을 연다.
+    /// 이 앱의 '앱 정보' 화면을 연다. 사용자가 배터리 → '제한 없음'을 고른다.
+    /// (예외를 바로 요청하는 시스템 창은 플레이스토어 정책상 쓰지 않는다.)
+    /// 앱 정보 화면이 막힌 폰이면 배터리 최적화 목록 화면을 연다.
     private fun requestIgnoreBatteryOptimizations(): Boolean {
         val intents = listOf(
-            Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-                .setData(Uri.parse("package:$packageName")),
-            Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS),
             Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                 .setData(Uri.parse("package:$packageName")),
+            Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS),
         )
         for (intent in intents) {
             try {

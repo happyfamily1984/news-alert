@@ -1,4 +1,5 @@
 import '../models/matched_article.dart';
+import '../utils/keyword_match.dart';
 import 'notification_service.dart';
 import 'rss_service.dart';
 import 'storage_service.dart';
@@ -41,11 +42,13 @@ class NewsCheckService {
     for (var i = 0; i < activeFeeds.length; i++) {
       final source = activeFeeds[i].name;
       for (final item in results[i]) {
-        final matched = keywords.where((keyword) {
-          final kw = keyword.toLowerCase();
-          return item.title.toLowerCase().contains(kw) ||
-              item.description.toLowerCase().contains(kw);
-        }).toList();
+        final matched = keywords
+            .where(
+              (keyword) =>
+                  containsKeyword(item.title, keyword) ||
+                  containsKeyword(item.description, keyword),
+            )
+            .toList();
         if (matched.isEmpty) continue;
 
         final previous = fresh[item.guid];

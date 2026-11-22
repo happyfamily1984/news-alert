@@ -3,14 +3,18 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!-- 배터리 최적화 제외 요청 창을 띄우기 위한 권한 (백그라운드 확인이 미뤄지지 않게). -->
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- FOREGROUND_SERVICE·REQUEST_IGNORE_BATTERY_OPTIMIZATIONS는 넣지 않는다.
+         둘 다 플레이스토어 심사에서 사용 목적 소명이 필요하고, 뉴스 알림 앱은
+         배터리 최적화 예외 직접 요청이 허용되는 용도에 해당하지 않는다.
+         배터리 설정은 앱 정보 화면을 열어 사용자가 직접 바꾸게 안내한다. -->
 
     <application
         android:label="뉴스 알리미"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:enableOnBackInvokedCallback="false">
+        <!-- 대상 SDK 36부터 예측형 뒤로가기가 기본으로 켜져 뒤로가기가 앱으로
+             전달되지 않을 수 있다. 꺼 두어야 '탭 → 홈 → 종료 확인' 동작이 유지된다. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -43,6 +43,8 @@ app.*.map.json
 **/android/key.properties
 *.jks
 *.keystore
+# 플레이 업로드 키는 절대 커밋하지 않는다 (직접 설치용 app-keystore.p12만 저장소에 있음).
+upload-keystore*
 
 # iOS/Xcode related
 **/ios/**/*.mode1v3
