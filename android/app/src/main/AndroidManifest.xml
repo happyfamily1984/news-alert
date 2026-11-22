@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -7,6 +8,11 @@
          둘 다 플레이스토어 심사에서 사용 목적 소명이 필요하고, 뉴스 알림 앱은
          배터리 최적화 예외 직접 요청이 허용되는 용도에 해당하지 않는다.
          배터리 설정은 앱 정보 화면을 열어 사용자가 직접 바꾸게 안내한다. -->
+    <!-- WorkManager 라이브러리가 FOREGROUND_SERVICE를 끼워 넣는데, 이 앱은 포그라운드
+         작업(setForeground)을 쓰지 않으므로 병합 결과에서 뺀다. -->
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"
+        tools:node="remove" />
 
     <application
         android:label="뉴스 알리미"
