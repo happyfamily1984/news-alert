@@ -33,6 +33,9 @@ class StorageService {
   static const String _lastCheckKey = 'last_check_at';
   static const String _themeKey = 'theme_mode';
   static const String _sourcesKey = 'enabled_sources';
+  static const String _bgRunAtKey = 'bg_last_run_at';
+  static const String _bgResultKey = 'bg_last_result';
+  static const String _batteryAskedKey = 'battery_prompt_shown';
 
   static const int maxStoredArticles = 100;
 
@@ -177,6 +180,34 @@ class StorageService {
   Future<void> setLastCheckAt(DateTime value) async {
     final prefs = await _store;
     await prefs.setString(_lastCheckKey, value.toIso8601String());
+  }
+
+  /// 백그라운드 자동 확인이 마지막으로 돈 시각과 결과.
+  /// 알림이 안 올 때 자동 확인이 실제로 도는지 설정 화면에서 보려고 남긴다.
+  Future<(DateTime?, String?)> getBackgroundRun() async {
+    final prefs = await _store;
+    final raw = prefs.getString(_bgRunAtKey);
+    return (
+      raw == null ? null : DateTime.tryParse(raw),
+      prefs.getString(_bgResultKey),
+    );
+  }
+
+  Future<void> setBackgroundRun(DateTime at, String result) async {
+    final prefs = await _store;
+    await prefs.setString(_bgRunAtKey, at.toIso8601String());
+    await prefs.setString(_bgResultKey, result);
+  }
+
+  /// 배터리 최적화 해제 안내 창을 이미 한 번 보여줬는지.
+  Future<bool> getBatteryPromptShown() async {
+    final prefs = await _store;
+    return prefs.getBool(_batteryAskedKey) ?? false;
+  }
+
+  Future<void> setBatteryPromptShown() async {
+    final prefs = await _store;
+    await prefs.setBool(_batteryAskedKey, true);
   }
 
   /// 'system' | 'light' | 'dark'

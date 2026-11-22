@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../services/battery_service.dart';
 import '../services/notification_service.dart';
 import '../services/settings_controller.dart';
+import '../services/storage_service.dart';
 import '../theme.dart';
+import '../utils/date_format.dart';
 import '../widgets/app_background.dart';
 
 /// 화면 ⑤ 설정. v3 시안:
@@ -17,8 +20,59 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen>
+    with WidgetsBindingObserver {
   bool _testing = false;
+  bool _batteryOk = true;
+  DateTime? _bgRunAt;
+  String? _bgResult;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _loadBackgroundStatus();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// 시스템 배터리 창에서 돌아오거나 앱으로 돌아오면 상태를 다시 읽는다.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _loadBackgroundStatus();
+  }
+
+  Future<void> _loadBackgroundStatus() async {
+    final batteryOk = await BatteryService.instance.isIgnoringOptimizations();
+    final (runAt, result) = await StorageService.instance.getBackgroundRun();
+    if (!mounted) return;
+    setState(() {
+      _batteryOk = batteryOk;
+      _bgRunAt = runAt;
+      _bgResult = result;
+    });
+  }
+
+  Future<void> _requestBattery() async {
+    if (_batteryOk) return;
+    final opened = await BatteryService.instance.requestIgnoreOptimizations();
+    if (opened || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('폰 설정 > 앱 > 뉴스 알리미 > 배터리에서 \'제한 없음\'으로 바꿔주세요.'),
+      ),
+    );
+  }
+
+  String get _bgStatusText {
+    final at = _bgRunAt;
+    if (at == null) return '아직 자동 확인 기록이 없습니다';
+    return '${formatArticleTime(at)} · ${_bgResult ?? ''}';
+  }
 
   Future<void> _testNotification() async {
     if (_testing) return;
@@ -26,8 +80,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       // 알림 권한이 꺼져 있으면 보내도 안 뜨니 먼저 확인하고, 꺼져 있으면
       // 권한 요청을 한 번 더 띄운다.
-      var enabled =
-          await NotificationService.instance.areNotificationsEnabled();
+      var enabled = await NotificationService.instance
+          .areNotificationsEnabled();
       if (!enabled) {
         await NotificationService.instance.requestPermission();
         enabled = await NotificationService.instance.areNotificationsEnabled();
@@ -36,17 +90,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              '알림 권한이 꺼져 있어요. 폰 설정 > 앱 > 뉴스 알리미 > 알림에서 켜주세요.',
-            ),
+            content: Text('알림 권한이 꺼져 있어요. 폰 설정 > 앱 > 뉴스 알리미 > 알림에서 켜주세요.'),
           ),
         );
         return;
       }
       // 보내기가 끝나지 않고 멈추는 경우에도 빙글빙글만 돌지 않게 시간 제한을 둔다.
-      await NotificationService.instance
-          .showTestNotification()
-          .timeout(const Duration(seconds: 10));
+      await NotificationService.instance.showTestNotification().timeout(
+        const Duration(seconds: 10),
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -114,11 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: '알림 확인 주기',
                         subtitle: '백그라운드에서 RSS를 확인하는 간격',
                         value: settings.checkIntervalMinutes,
-                        options: const [
-                          (15, '15분'),
-                          (30, '30분'),
-                          (60, '60분'),
-                        ],
+                        options: const [(15, '15분'), (30, '30분'), (60, '60분')],
                         onChanged: (value) {
                           if (value != null) {
                             settings.setCheckIntervalMinutes(value);
@@ -138,17 +186,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         icon: Icons.receipt_long,
                         title: '알림 테스트',
                         subtitle: '테스트 알림을 바로 보내봅니다',
-                        trailing:
-                            _testing
-                                ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                                : const Icon(Icons.chevron_right),
+                        trailing: _testing
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.chevron_right),
                         onTap: _testNotification,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+                  _SectionTitle(title: '자동 확인', brightness: brightness),
+                  const SizedBox(height: 16),
+                  _SettingsCard(
+                    brightness: brightness,
+                    children: [
+                      _ActionRow(
+                        icon: Icons.battery_charging_full,
+                        title: '배터리 최적화 제외',
+                        subtitle: _batteryOk
+                            ? '제외됨 · 자동 확인 정상'
+                            : '적용 중 · 알림이 늦을 수 있어요',
+                        trailing: _batteryOk
+                            ? Icon(
+                                Icons.check_circle,
+                                color: AppColors.primary(brightness),
+                              )
+                            : const Icon(Icons.chevron_right),
+                        onTap: _requestBattery,
+                      ),
+                      const _Divider(),
+                      _ActionRow(
+                        icon: Icons.history,
+                        title: '마지막 자동 확인',
+                        subtitle: _bgStatusText,
+                        trailing: const Icon(Icons.refresh),
+                        onTap: _loadBackgroundStatus,
                       ),
                     ],
                   ),
@@ -163,13 +240,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: '연합뉴스',
                         subtitle: '연합뉴스 RSS에서 뉴스를 가져옵니다',
                         value: settings.enabledSources.contains('연합뉴스'),
-                        onChanged:
-                            _canTurnOff(settings, '연합뉴스')
-                                ? (v) => settings.setSourceEnabled(
-                                  '연합뉴스',
-                                  v,
-                                )
-                                : null,
+                        onChanged: _canTurnOff(settings, '연합뉴스')
+                            ? (v) => settings.setSourceEnabled('연합뉴스', v)
+                            : null,
                       ),
                       const _Divider(),
                       _SwitchRow(
@@ -177,11 +250,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: 'YTN',
                         subtitle: 'YTN RSS에서 뉴스를 가져옵니다',
                         value: settings.enabledSources.contains('YTN'),
-                        onChanged:
-                            _canTurnOff(settings, 'YTN')
-                                ? (v) =>
-                                    settings.setSourceEnabled('YTN', v)
-                                : null,
+                        onChanged: _canTurnOff(settings, 'YTN')
+                            ? (v) => settings.setSourceEnabled('YTN', v)
+                            : null,
                       ),
                       const _Divider(),
                       _SwitchRow(
@@ -189,11 +260,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: 'MBC',
                         subtitle: 'MBC 뉴스 RSS에서 뉴스를 가져옵니다',
                         value: settings.enabledSources.contains('MBC'),
-                        onChanged:
-                            _canTurnOff(settings, 'MBC')
-                                ? (v) =>
-                                    settings.setSourceEnabled('MBC', v)
-                                : null,
+                        onChanged: _canTurnOff(settings, 'MBC')
+                            ? (v) => settings.setSourceEnabled('MBC', v)
+                            : null,
                       ),
                       const _Divider(),
                       _SwitchRow(
@@ -201,11 +270,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: 'KBS',
                         subtitle: 'KBS 뉴스 RSS에서 뉴스를 가져옵니다',
                         value: settings.enabledSources.contains('KBS'),
-                        onChanged:
-                            _canTurnOff(settings, 'KBS')
-                                ? (v) =>
-                                    settings.setSourceEnabled('KBS', v)
-                                : null,
+                        onChanged: _canTurnOff(settings, 'KBS')
+                            ? (v) => settings.setSourceEnabled('KBS', v)
+                            : null,
                       ),
                     ],
                   ),
@@ -233,7 +300,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const _InfoRow(
                         icon: Icons.info_outlined,
                         title: '앱 버전',
-                        value: '1.0.0',
+                        value: '1.0.0 (15)',
                       ),
                     ],
                   ),
@@ -372,7 +439,12 @@ class _SwitchRow extends StatelessWidget {
               children: [
                 Text(title, style: AppTextStyles.settingsName(brightness)),
                 const SizedBox(height: 2),
-                Text(subtitle, style: AppTextStyles.settingsDesc(brightness)),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.settingsDesc(brightness),
+                ),
               ],
             ),
           ),
@@ -422,7 +494,12 @@ class _DropdownRow<T> extends StatelessWidget {
               children: [
                 Text(title, style: AppTextStyles.settingsName(brightness)),
                 const SizedBox(height: 2),
-                Text(subtitle, style: AppTextStyles.settingsDesc(brightness)),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.settingsDesc(brightness),
+                ),
               ],
             ),
           ),
@@ -434,15 +511,14 @@ class _DropdownRow<T> extends StatelessWidget {
               color: AppColors.textSecondary(brightness),
             ),
             style: AppTextStyles.body(brightness),
-            items:
-                options
-                    .map(
-                      (option) => DropdownMenuItem<T>(
-                        value: option.$1,
-                        child: Text(option.$2),
-                      ),
-                    )
-                    .toList(),
+            items: options
+                .map(
+                  (option) => DropdownMenuItem<T>(
+                    value: option.$1,
+                    child: Text(option.$2),
+                  ),
+                )
+                .toList(),
             onChanged: onChanged,
           ),
           const SizedBox(width: 20),
@@ -486,7 +562,12 @@ class _ActionRow extends StatelessWidget {
                 children: [
                   Text(title, style: AppTextStyles.settingsName(brightness)),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: AppTextStyles.settingsDesc(brightness)),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.settingsDesc(brightness),
+                  ),
                 ],
               ),
             ),

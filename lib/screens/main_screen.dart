@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../services/battery_service.dart';
 import '../services/notification_service.dart';
+import '../services/storage_service.dart';
 import '../services/settings_controller.dart';
 import '../theme.dart';
 import '../widgets/app_bottom_navigation.dart';
@@ -38,7 +40,56 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         await NotificationService.instance.handleLaunchNotification();
       } catch (_) {}
       await NotificationService.instance.requestPermission();
+      await _askBatteryOnce();
     });
+  }
+
+  /// 배터리 최적화가 켜져 있으면 처음 한 번만 이유를 설명하고 해제를 권한다.
+  /// (나중에는 설정 > 자동 확인에서 언제든 바꿀 수 있다.)
+  Future<void> _askBatteryOnce() async {
+    final storage = StorageService.instance;
+    if (await storage.getBatteryPromptShown()) return;
+    if (await BatteryService.instance.isIgnoringOptimizations()) return;
+    if (!mounted) return;
+    await storage.setBatteryPromptShown();
+    if (!mounted) return;
+    final brightness = Theme.of(context).brightness;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface(brightness),
+        title: Text('알림을 제때 받으려면', style: AppTextStyles.cardTitle(brightness)),
+        content: Text(
+          '폰의 배터리 절약 기능 때문에 앱을 닫아 두면 뉴스 확인이 '
+          '몇 시간씩 미뤄질 수 있어요.\n\n'
+          '다음 창에서 \'허용\'을 누르면 앱을 닫아도 알림이 제때 옵니다.',
+          style: AppTextStyles.body(brightness),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              '나중에',
+              style: AppTextStyles.body(
+                brightness,
+              ).copyWith(color: AppColors.textSecondary(brightness)),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              '설정하기',
+              style: AppTextStyles.body(
+                brightness,
+              ).copyWith(color: AppColors.primary(brightness)),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (go == true) {
+      await BatteryService.instance.requestIgnoreOptimizations();
+    }
   }
 
   @override
