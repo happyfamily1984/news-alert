@@ -1,7 +1,7 @@
 name: news_alarm
 description: "키워드 기반 뉴스 알림 앱"
 publish_to: 'none'
-version: 1.0.0+16
+version: 1.1.0+17
 
 environment:
   sdk: ^3.8.0

@@ -24,12 +24,12 @@ class MatchedArticle {
     this.source = '연합뉴스',
   });
 
-  MatchedArticle copyWith({List<String>? keywords}) {
+  MatchedArticle copyWith({List<String>? keywords, DateTime? pubDate}) {
     return MatchedArticle(
       id: id,
       title: title,
       link: link,
-      pubDate: pubDate,
+      pubDate: pubDate ?? this.pubDate,
       description: description,
       keywords: keywords ?? this.keywords,
       fetchedAt: fetchedAt,
@@ -44,10 +44,9 @@ class MatchedArticle {
       link: json['link'] as String,
       pubDate: DateTime.parse(json['pubDate'] as String),
       description: json['description'] as String? ?? '',
-      keywords:
-          (json['keywords'] as List<dynamic>)
-              .map((e) => e as String)
-              .toList(),
+      keywords: (json['keywords'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
       fetchedAt: DateTime.parse(json['fetchedAt'] as String),
       // source 필드가 없던 시절에 저장된 기사는 연합뉴스로 본다.
       source: json['source'] as String? ?? '연합뉴스',

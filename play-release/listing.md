@@ -18,6 +18,8 @@
 · 필요한 뉴스만 조용히 받아보고 싶은 분
 
 ■ 주요 기능
+· 열자마자 최신 뉴스: 설치 직후에도 추천 키워드(경제·부동산·AI)와 7개 언론사의 최신 뉴스가 바로 보여요.
+· 출처와 발행 일시 표시: 모든 기사에 원본 언론사와 발행 일시를 함께 보여드려요.
 · 키워드 알림: 등록한 키워드가 제목이나 요약에 들어간 새 기사가 올라오면 알림을 보내드려요.
 · 여러 언론사 한 번에: 연합뉴스, 조선일보, 중앙일보, 동아일보, YTN, MBC, KBS 기사를 함께 확인해요. 설정에서 원하는 언론사만 고를 수 있어요.
 · 키워드별 모아보기: 키워드마다 오늘 올라온 기사 수와 기사 목록을 볼 수 있어요.
@@ -29,6 +31,11 @@
 · 회원가입, 로그인이 필요 없어요.
 · 등록한 키워드와 기사 기록은 휴대폰 안에만 저장되고 어디에도 보내지 않아요.
 · 광고와 사용 기록 수집이 없어요.
+
+■ 문의
+· 이메일: happyfamily1984.3@gmail.com
+· 웹사이트: https://happyfamily1984.github.io/jihan-distribution/
+· 앱의 설정 > 문의에서도 확인할 수 있어요.
 
 ■ 알림이 늦게 온다면
 휴대폰의 배터리 절약 기능 때문에 자동 확인이 늦어질 수 있어요. 앱의 설정 > 자동 확인에서 안내에 따라 배터리 사용을 '제한 없음'으로 바꿔 주세요.
@@ -43,14 +50,14 @@
 
 ## 연락처
 
-- 이메일: 개발자 계정 이메일 (공개 표시됨)
-- 웹사이트: https://github.com/happyfamily1984/news-alert (선택)
+- 이메일: happyfamily1984.3@gmail.com
+- 웹사이트: https://happyfamily1984.github.io/jihan-distribution/
 - 개인정보처리방침 URL: https://github.com/happyfamily1984/news-alert/blob/main/docs/privacy-policy.md
 
-## 그래픽 (docs/play-store/graphics/)
+## 그래픽 (play-release/graphics/)
 
 | 항목 | 파일 | 규격 |
 |---|---|---|
 | 앱 아이콘 | icon-512.png | 512×512 PNG |
 | 그래픽 이미지 | feature-graphic.png | 1024×500 PNG |
-| 휴대전화 스크린샷 | screenshot-1~4.png | 1080×1920 PNG |
+| 휴대전화 스크린샷 | screenshot-1~4.png | 1080×1920 PNG (홈 · 최신 뉴스 · 매칭 뉴스 · 문의) |

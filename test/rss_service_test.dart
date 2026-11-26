@@ -33,7 +33,8 @@ void main() {
     final items = RssService.parse(body, _feed('조선일보'));
     expect(items, hasLength(2));
     expect(items.first.link, startsWith('https://www.chosun.com/'));
-    expect(items.first.pubDate.year, 2026);
+    // 픽스처 첫 기사: Sun, 22 Nov 2026 20:40:00 +0000 (가져온 시각이 아니라 발행 시각)
+    expect(items.first.pubDate.toUtc(), DateTime.utc(2026, 11, 22, 20, 40));
   });
 
   test('구글 뉴스 피드: 제목 끝 언론사 꼬리말을 떼고 요약은 비운다', () {

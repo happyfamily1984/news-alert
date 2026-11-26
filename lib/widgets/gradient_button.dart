@@ -24,10 +24,9 @@ class GradientButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final enabled = onPressed != null;
-    final gradient =
-        enabled
-            ? AppColors.buttonGradientLight
-            : const [Color(0xFFCBD5E1), Color(0xFF94A3B8)];
+    final gradient = enabled
+        ? AppColors.buttonGradientLight
+        : const [Color(0xFFCBD5E1), Color(0xFF94A3B8)];
     return SizedBox(
       height: height,
       width: double.infinity,
@@ -37,16 +36,15 @@ class GradientButton extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(colors: gradient),
             borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
-            boxShadow:
-                enabled
-                    ? [
-                      BoxShadow(
-                        color: const Color(0xFF246BCE).withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ]
-                    : null,
+            boxShadow: enabled
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFF246BCE).withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : null,
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
@@ -59,10 +57,7 @@ class GradientButton extends StatelessWidget {
                     Icon(icon, color: Colors.white, size: 20),
                     const SizedBox(width: 6),
                   ],
-                  Text(
-                    label,
-                    style: AppTextStyles.button(brightness),
-                  ),
+                  Text(label, style: AppTextStyles.button(brightness)),
                   if (trailingIcon != null) ...[
                     const SizedBox(width: 6),
                     Icon(trailingIcon, color: Colors.white, size: 20),
@@ -101,26 +96,23 @@ class OutlineButton extends StatelessWidget {
       width: double.infinity,
       child: OutlinedButton.icon(
         onPressed: onPressed,
-        icon:
-            icon != null
-                ? Icon(icon, size: 20, color: AppColors.primary(brightness))
-                : null,
+        icon: icon != null
+            ? Icon(icon, size: 20, color: AppColors.primary(brightness))
+            : null,
         label: Text(
           label,
           style: AppTextStyles.button(brightness).copyWith(
-            color:
-                enabled
-                    ? AppColors.primary(brightness)
-                    : AppColors.textSecondary(brightness),
+            color: enabled
+                ? AppColors.primary(brightness)
+                : AppColors.textSecondary(brightness),
           ),
         ),
         style: OutlinedButton.styleFrom(
           backgroundColor: AppColors.surface(brightness),
           side: BorderSide(
-            color:
-                enabled
-                    ? AppColors.primary(brightness)
-                    : AppColors.border(brightness),
+            color: enabled
+                ? AppColors.primary(brightness)
+                : AppColors.border(brightness),
             width: 1.5,
           ),
           shape: RoundedRectangleBorder(

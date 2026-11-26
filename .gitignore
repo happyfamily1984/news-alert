@@ -69,3 +69,7 @@ upload-keystore*
 
 # Web related
 lib/generated_plugin_registrant.dart
+
+# 출시 파일(AAB·APK)은 용량이 커서 저장소에 넣지 않는다. play-release/ 안 문서·이미지만 커밋한다.
+play-release/*.aab
+play-release/*.apk

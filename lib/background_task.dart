@@ -16,11 +16,13 @@ void callbackDispatcher() {
     WidgetsFlutterBinding.ensureInitialized();
     final startedAt = DateTime.now();
     try {
-      final fresh = await NewsCheckService.instance.runCheck(notify: true);
-      await _logRun(
-        startedAt,
-        fresh.isEmpty ? '새 뉴스 없음' : '새 뉴스 ${fresh.length}건',
-      );
+      final result = await NewsCheckService.instance.runCheck(notify: true);
+      if (result.allFailed) {
+        await _logRun(startedAt, '실패: 뉴스 서버에 연결하지 못함');
+        return false; // WorkManager가 잠시 뒤 다시 시도한다.
+      }
+      final count = result.newArticles.length;
+      await _logRun(startedAt, count == 0 ? '새 뉴스 없음' : '새 뉴스 $count건');
       return true;
     } catch (e) {
       await _logRun(startedAt, '실패: $e');

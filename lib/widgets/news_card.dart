@@ -4,10 +4,11 @@ import '../models/matched_article.dart';
 import '../theme.dart';
 import '../utils/date_format.dart';
 
-/// 매칭 뉴스 목록의 뉴스 카드.
+/// 뉴스 목록의 뉴스 카드 (매칭 뉴스·최신 뉴스 공용).
+/// 맨 위에 원본 출처(언론사)와 발행 일시를 표시한다 (플레이 뉴스 정책 요건).
 /// 기사 제목 17sp SemiBold (줄 간격 1.4), 매칭 키워드는 제목 안에서 노란 배경으로 강조,
-/// 키워드 태그는 작은 캡슐(높이 30dp), 출처·시간 13sp,
-/// 새 뉴스는 카드 오른쪽 상단 배지.
+/// 키워드 태그는 작은 캡슐(높이 30dp). 최신 뉴스는 키워드 태그가 없다.
+/// 새 뉴스는 출처 줄 오른쪽 배지.
 class NewsCard extends StatelessWidget {
   final MatchedArticle article;
   final bool isRead;
@@ -37,14 +38,28 @@ class NewsCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 새 뉴스 배지는 제목 옆이 아니라 카드 오른쪽 상단에 따로 배치.
+              // 새 뉴스 배지는 카드 오른쪽 상단에 따로 둔다.
               if (!isRead) ...[
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [_NewBadge(brightness: brightness)],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
               ],
+              // 원본 출처 + 발행 일시. 좁은 화면에서는 줄을 바꾼다.
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 2,
+                children: [
+                  Text(article.source, style: AppTextStyles.source(brightness)),
+                  Text(
+                    formatPublished(article.pubDate),
+                    style: AppTextStyles.meta(brightness),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
               RichText(
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
@@ -56,25 +71,21 @@ class NewsCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children:
-                    article.keywords
-                        .map(
-                          (keyword) => _KeywordTag(
-                            keyword: keyword,
-                            brightness: brightness,
-                          ),
-                        )
-                        .toList(),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${article.source} · ${formatArticleTime(article.pubDate)}',
-                style: AppTextStyles.meta(brightness),
-              ),
+              if (article.keywords.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: article.keywords
+                      .map(
+                        (keyword) => _KeywordTag(
+                          keyword: keyword,
+                          brightness: brightness,
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
             ],
           ),
         ),
@@ -89,9 +100,7 @@ class NewsCard extends StatelessWidget {
     List<String> keywords,
     Brightness brightness,
   ) {
-    final baseStyle = AppTextStyles.cardTitle(
-      brightness,
-    ).copyWith(height: 1.4);
+    final baseStyle = AppTextStyles.cardTitle(brightness).copyWith(height: 1.4);
     final highlightStyle = baseStyle.copyWith(
       backgroundColor: AppColors.highlight(brightness),
     );
@@ -120,10 +129,7 @@ class NewsCard extends StatelessWidget {
     for (final range in merged) {
       if (range.start > cursor) {
         spans.add(
-          TextSpan(
-            text: text.substring(cursor, range.start),
-            style: baseStyle,
-          ),
+          TextSpan(text: text.substring(cursor, range.start), style: baseStyle),
         );
       }
       spans.add(
@@ -184,15 +190,18 @@ class _KeywordTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // alignment를 주면 Container가 줄 전체 폭으로 늘어나서 태그가 길게 보였다.
     return Container(
       height: AppSizes.keywordTagHeight,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.tagBackground(brightness),
         borderRadius: BorderRadius.circular(AppSizes.keywordTagHeight / 2),
       ),
-      child: Text(keyword, style: AppTextStyles.tag(brightness)),
+      child: Center(
+        widthFactor: 1,
+        child: Text(keyword, style: AppTextStyles.tag(brightness)),
+      ),
     );
   }
 }

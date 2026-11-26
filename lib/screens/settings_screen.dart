@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/battery_service.dart';
@@ -68,6 +69,37 @@ class _SettingsScreenState extends State<SettingsScreen>
         content: Text('폰 설정 > 앱 > 뉴스 알리미 > 배터리에서 \'제한 없음\'으로 바꿔주세요.'),
       ),
     );
+  }
+
+  Future<void> _openUrl(String url) async {
+    final ok = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('브라우저를 열 수 없어요: $url')));
+    }
+  }
+
+  /// 메일 앱을 연다. 메일 앱이 없으면 주소를 복사해 둔다.
+  Future<void> _openEmail() async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: kContactEmail,
+      query: 'subject=${Uri.encodeComponent('[뉴스 알리미] 문의')}',
+    );
+    var ok = false;
+    try {
+      ok = await launchUrl(uri);
+    } catch (_) {}
+    if (ok || !mounted) return;
+    await Clipboard.setData(const ClipboardData(text: kContactEmail));
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('메일 앱이 없어 이메일 주소를 복사했어요.')));
   }
 
   String get _bgStatusText {
@@ -289,9 +321,42 @@ class _SettingsScreenState extends State<SettingsScreen>
                       const _InfoRow(
                         icon: Icons.info_outlined,
                         title: '앱 버전',
-                        value: '1.0.0',
+                        value: kAppVersion,
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 28),
+                  // 개발자 연락처 (플레이 뉴스 앱 정책 요건: 앱 안에서 바로 확인 가능해야 함).
+                  _SectionTitle(title: '문의', brightness: brightness),
+                  const SizedBox(height: 16),
+                  _SettingsCard(
+                    brightness: brightness,
+                    children: [
+                      _ActionRow(
+                        icon: Icons.mail_outline,
+                        title: '이메일 문의',
+                        subtitle: kContactEmail,
+                        fullSubtitle: true,
+                        trailing: const Icon(Icons.open_in_new),
+                        onTap: _openEmail,
+                      ),
+                      const _Divider(),
+                      _ActionRow(
+                        icon: Icons.language,
+                        title: '웹사이트',
+                        subtitle: kContactWebsite.replaceFirst('https://', ''),
+                        fullSubtitle: true,
+                        trailing: const Icon(Icons.open_in_new),
+                        onTap: () => _openUrl(kContactWebsite),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '뉴스 알리미는 각 언론사가 공개한 RSS로 기사 제목·요약·발행 일시를 '
+                    '보여주며, 기사의 저작권은 각 언론사에 있습니다. '
+                    '언론사와 제휴 관계가 없습니다.',
+                    style: AppTextStyles.caption(brightness),
                   ),
                 ],
               );
@@ -304,6 +369,11 @@ class _SettingsScreenState extends State<SettingsScreen>
 }
 
 /// 플레이스토어 등록정보에도 같은 주소를 쓴다 (docs/privacy-policy.md).
+const String kAppVersion = '1.1.0';
+const String kContactEmail = 'happyfamily1984.3@gmail.com';
+const String kContactWebsite =
+    'https://happyfamily1984.github.io/jihan-distribution/';
+
 const String kPrivacyPolicyUrl =
     'https://github.com/happyfamily1984/news-alert/blob/main/docs/privacy-policy.md';
 
@@ -528,19 +598,26 @@ class _ActionRow extends StatelessWidget {
   final Widget trailing;
   final VoidCallback onTap;
 
+  /// true면 설명을 자르지 않고 줄을 바꿔 전부 보여준다 (연락처 주소 등).
+  final bool fullSubtitle;
+
   const _ActionRow({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.trailing,
     required this.onTap,
+    this.fullSubtitle = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    return SizedBox(
-      height: AppSizes.settingsRowHeight,
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        minHeight: AppSizes.settingsRowHeight,
+        maxHeight: fullSubtitle ? double.infinity : AppSizes.settingsRowHeight,
+      ),
       child: InkWell(
         onTap: onTap,
         child: Row(
@@ -553,18 +630,22 @@ class _ActionRow extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (fullSubtitle) const SizedBox(height: 14),
                   Text(title, style: AppTextStyles.settingsName(brightness)),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: fullSubtitle ? null : 1,
+                    overflow: fullSubtitle ? null : TextOverflow.ellipsis,
                     style: AppTextStyles.settingsDesc(brightness),
                   ),
+                  if (fullSubtitle) const SizedBox(height: 14),
                 ],
               ),
             ),
-            trailing,
+            // 주소 전체를 보여주는 행은 폭을 넓히려고 오른쪽 아이콘을 뺀다
+            // (행 전체를 누르면 열린다).
+            if (!fullSubtitle) trailing,
             const SizedBox(width: 20),
           ],
         ),

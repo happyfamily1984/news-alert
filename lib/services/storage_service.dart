@@ -40,6 +40,61 @@ class StorageService {
 
   static const int maxStoredArticles = 100;
 
+  /// 매칭·최신 기사 모두 발행 후 30일이 지나면 지운다.
+  static const Duration articleRetention = Duration(days: 30);
+
+  static const String _latestKey = 'latest_articles';
+  static const String _fetchFailedKey = 'last_fetch_failed';
+  static const int maxLatestArticles = 60;
+
+  /// 키워드와 상관없는 전체 최신 기사 (홈 '최신 뉴스', 뉴스 탭 '최신 뉴스').
+  Future<List<MatchedArticle>> getLatestArticles() async {
+    final prefs = await _store;
+    return _decodeArticles(prefs.getStringList(_latestKey));
+  }
+
+  Future<void> saveLatestArticles(List<MatchedArticle> articles) async {
+    final prefs = await _store;
+    final kept = _withinRetention(articles);
+    final capped = kept.length > maxLatestArticles
+        ? kept.sublist(0, maxLatestArticles)
+        : kept;
+    await prefs.setStringList(
+      _latestKey,
+      capped.map((a) => jsonEncode(a.toJson())).toList(),
+    );
+  }
+
+  /// 마지막 확인에서 모든 피드를 가져오지 못했는지 (네트워크 오류 안내용).
+  Future<bool> getLastFetchFailed() async {
+    final prefs = await _store;
+    return prefs.getBool(_fetchFailedKey) ?? false;
+  }
+
+  Future<void> setLastFetchFailed(bool value) async {
+    final prefs = await _store;
+    await prefs.setBool(_fetchFailedKey, value);
+  }
+
+  static List<MatchedArticle> _withinRetention(List<MatchedArticle> list) {
+    final cutoff = DateTime.now().subtract(articleRetention);
+    return list.where((a) => a.pubDate.isAfter(cutoff)).toList();
+  }
+
+  static List<MatchedArticle> _decodeArticles(List<String>? raw) {
+    final articles = <MatchedArticle>[];
+    for (final item in raw ?? const <String>[]) {
+      try {
+        articles.add(
+          MatchedArticle.fromJson(jsonDecode(item) as Map<String, dynamic>),
+        );
+      } catch (_) {
+        // 손상된 항목은 건너뛴다.
+      }
+    }
+    return articles;
+  }
+
   /// 켜진 뉴스 출처 목록. 저장된 게 없으면 전부 켠 것으로 본다.
   /// 앱 업데이트로 새로 생긴 출처(사용자가 본 적 없는 출처)는 켠 상태로 시작한다.
   Future<Set<String>> getEnabledSources() async {
@@ -72,9 +127,19 @@ class StorageService {
     );
   }
 
+  /// 처음 설치했을 때 미리 등록해 두는 추천 키워드.
+  /// 키워드가 하나도 없으면 첫 화면이 비어 '작동하지 않는 앱'처럼 보이므로
+  /// (플레이 심사 거부 사유), 바로 기사가 보이도록 넣어 둔다. 사용자가 지울 수 있다.
+  static const List<String> defaultKeywords = ['경제', '부동산', 'AI'];
+
+  /// 키워드 목록. 한 번도 저장된 적이 없으면(첫 실행) 추천 키워드를 등록한다.
+  /// 사용자가 키워드를 모두 지운 경우(빈 목록이 저장됨)에는 다시 넣지 않는다.
   Future<List<String>> getKeywords() async {
     final prefs = await _store;
-    return prefs.getStringList(_keywordsKey) ?? <String>[];
+    final saved = prefs.getStringList(_keywordsKey);
+    if (saved != null) return saved;
+    await prefs.setStringList(_keywordsKey, defaultKeywords);
+    return List<String>.from(defaultKeywords);
   }
 
   Future<void> addKeyword(String keyword) async {
@@ -110,25 +175,15 @@ class StorageService {
 
   Future<List<MatchedArticle>> getArticles() async {
     final prefs = await _store;
-    final raw = prefs.getStringList(_articlesKey) ?? <String>[];
-    final articles = <MatchedArticle>[];
-    for (final item in raw) {
-      try {
-        articles.add(
-          MatchedArticle.fromJson(jsonDecode(item) as Map<String, dynamic>),
-        );
-      } catch (_) {
-        // 손상된 항목은 건너뛴다.
-      }
-    }
-    return articles;
+    return _decodeArticles(prefs.getStringList(_articlesKey));
   }
 
   Future<void> saveArticles(List<MatchedArticle> articles) async {
     final prefs = await _store;
-    final capped = articles.length > maxStoredArticles
-        ? articles.sublist(0, maxStoredArticles)
-        : articles;
+    final kept = _withinRetention(articles);
+    final capped = kept.length > maxStoredArticles
+        ? kept.sublist(0, maxStoredArticles)
+        : kept;
     await prefs.setStringList(
       _articlesKey,
       capped.map((a) => jsonEncode(a.toJson())).toList(),

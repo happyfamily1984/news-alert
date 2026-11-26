@@ -47,8 +47,8 @@ main 브랜치에 푸시하면 GitHub Actions(`.github/workflows/build-apk.yml`)
 
 ## 플레이스토어 출시
 
-- 출시 절차·플레이 콘솔 입력값: `docs/play-store/release-guide.md`
-- 등록정보 문구: `docs/play-store/listing.md`, 이미지: `docs/play-store/graphics/`
+- 출시 절차·플레이 콘솔 입력값: `play-release/release-guide.md`
+- 등록정보 문구: `play-release/listing.md`, 이미지: `play-release/graphics/`, 출시 노트: `play-release/release-notes.md`
 - 개인정보처리방침: `docs/privacy-policy.md`
 - 플레이용 AAB는 비공개 업로드 키로 서명한다 (깃허브 시크릿 `UPLOAD_*`). 업로드 키는 저장소에 없다.
 

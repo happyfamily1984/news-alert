@@ -196,13 +196,8 @@ class AppTextStyles {
   static TextStyle button(Brightness b) =>
       _base(b, 16, FontWeight.w600, color: AppColors.onPrimary(b));
 
-  static TextStyle summaryCount(Brightness b) => _base(
-    b,
-    44,
-    FontWeight.w700,
-    height: 1.1,
-    color: Colors.white,
-  );
+  static TextStyle summaryCount(Brightness b) =>
+      _base(b, 44, FontWeight.w700, height: 1.1, color: Colors.white);
 
   static TextStyle summaryLabel(Brightness b) =>
       _base(b, 17, FontWeight.w500, color: Colors.white);
@@ -238,8 +233,7 @@ class AppTextStyles {
   static TextStyle tag(Brightness b) =>
       _base(b, 14, FontWeight.w500, color: AppColors.primary(b));
 
-  static TextStyle settingsName(Brightness b) =>
-      _base(b, 16, FontWeight.w500);
+  static TextStyle settingsName(Brightness b) => _base(b, 16, FontWeight.w500);
 
   static TextStyle settingsDesc(Brightness b) =>
       _base(b, 13, FontWeight.w400, color: AppColors.textSecondary(b));
@@ -267,8 +261,7 @@ class AppTextStyles {
   static TextStyle pillText(Brightness b) =>
       _base(b, 13, FontWeight.w500, color: AppColors.textPrimary(b));
 
-  static TextStyle checkRowLabel(Brightness b) =>
-      _base(b, 15, FontWeight.w600);
+  static TextStyle checkRowLabel(Brightness b) => _base(b, 15, FontWeight.w600);
 }
 
 /// 시안 규격 v3: 기본 좌우 여백 20dp, 카드 모서리 20dp, 버튼 모서리 18dp,
@@ -286,6 +279,7 @@ class AppSizes {
   static const double inputHeight = 64;
   static const double bottomNavHeight = 72;
   static const double fabSize = 56;
+
   /// 하단 탭 화면(홈/뉴스/설정) 리스트의 하단 여백: 기본 여백(20) + 하단바(72).
   /// 마지막 항목이 하단바에 닿지 않고 위로 충분히 올라오게 한다.
   /// 플로팅 버튼(+)이 마지막 항목을 가리는 것도 막는다.
@@ -317,9 +311,7 @@ class AppTheme {
         error: AppColors.errorLight,
       ),
       scaffoldBackgroundColor: AppColors.backgroundLight,
-      textTheme: GoogleFonts.notoSansKrTextTheme(
-        ThemeData.light().textTheme,
-      ),
+      textTheme: GoogleFonts.notoSansKrTextTheme(ThemeData.light().textTheme),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
@@ -362,9 +354,7 @@ class AppTheme {
         error: AppColors.errorDark,
       ),
       scaffoldBackgroundColor: AppColors.backgroundDark,
-      textTheme: GoogleFonts.notoSansKrTextTheme(
-        ThemeData.dark().textTheme,
-      ),
+      textTheme: GoogleFonts.notoSansKrTextTheme(ThemeData.dark().textTheme),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,

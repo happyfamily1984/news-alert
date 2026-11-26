@@ -58,10 +58,7 @@ class _AddKeywordScreenState extends State<AddKeywordScreen> {
           backgroundColor: Colors.transparent,
           resizeToAvoidBottomInset: true,
           appBar: AppBar(
-            title: Text(
-              '키워드 추가',
-              style: AppTextStyles.screenTitle(brightness),
-            ),
+            title: Text('키워드 추가', style: AppTextStyles.screenTitle(brightness)),
           ),
           // SingleChildScrollView + SafeArea: 작은 화면이나 키보드가 올라와도
           // 하단 안내 문구가 잘리지 않는다.
@@ -113,9 +110,7 @@ class _AddKeywordScreenState extends State<AddKeywordScreen> {
                               color: AppColors.textSecondary(brightness),
                             ),
                             hintText: '예) 인공지능, 부동산, 전기차',
-                            hintStyle: AppTextStyles.body(
-                              brightness,
-                            ).copyWith(
+                            hintStyle: AppTextStyles.body(brightness).copyWith(
                               fontSize: 16,
                               color: AppColors.textSecondary(brightness),
                             ),

@@ -1,8 +1,9 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
+
+import '../utils/rss_date.dart';
 
 /// RSS에서 가져온 기사 원본 한 건 (키워드 매칭 전).
 class RssArticle {
@@ -19,6 +20,16 @@ class RssArticle {
     required this.pubDate,
     required this.description,
   });
+}
+
+class HttpStatusException implements Exception {
+  final String url;
+  final int statusCode;
+
+  HttpStatusException(this.url, this.statusCode);
+
+  @override
+  String toString() => 'HTTP $statusCode';
 }
 
 /// 뉴스 출처 하나: 언론사 이름 + RSS 주소.
@@ -115,7 +126,11 @@ class RssService {
           headers: {'User-Agent': 'NewsAlarm/1.0 (keyword news alert)'},
         )
         .timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200) return <RssArticle>[];
+    // 실패를 빈 목록으로 숨기지 않고 던진다: 호출하는 쪽이 '모든 피드 실패'를
+    // 알아야 '네트워크 오류, 다시 시도' 안내를 띄울 수 있다.
+    if (response.statusCode != 200) {
+      throw HttpStatusException(feed.url, response.statusCode);
+    }
 
     // response.body는 응답 헤더에 문자셋이 없으면 latin1로 풀어서 한글이
     // 깨진다 (동아일보). 국내 피드는 모두 UTF-8이라 바이트를 직접 푼다.
@@ -150,12 +165,8 @@ class RssService {
             );
       if (title.isEmpty || link.isEmpty) continue;
 
-      DateTime pubDate;
-      try {
-        pubDate = HttpDate.parse(pubDateRaw).toLocal();
-      } catch (_) {
-        pubDate = DateTime.now();
-      }
+      // 발행일을 못 읽으면 가져온 시각으로 둔다 (날짜 없는 기사가 빠지지 않게).
+      final pubDate = parseRssDate(pubDateRaw) ?? DateTime.now();
       articles.add(
         RssArticle(
           title: title,

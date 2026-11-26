@@ -5,7 +5,7 @@ import 'package:news_alarm/services/storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 MatchedArticle _article(String id, List<String> keywords) {
-  final now = DateTime(2026, 11, 20, 12);
+  final now = DateTime.now().subtract(const Duration(hours: 1));
   return MatchedArticle(
     id: id,
     title: '제목 $id',
@@ -21,7 +21,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
+    // 키워드를 빈 목록으로 저장해 둔 상태 (추천 키워드가 들어가지 않게).
+    SharedPreferences.setMockInitialValues({'keywords': <String>[]});
   });
 
   test('키워드를 지우면 그 키워드로만 매칭된 기사도 지워진다', () async {
@@ -88,5 +89,42 @@ void main() {
       await StorageService.instance.getEnabledSources(),
       RssService.sourceNames,
     );
+  });
+
+  test('처음 실행하면 추천 키워드가 등록된다', () async {
+    SharedPreferences.setMockInitialValues({});
+    expect(
+      await StorageService.instance.getKeywords(),
+      StorageService.defaultKeywords,
+    );
+  });
+
+  test('키워드를 모두 지우면 추천 키워드가 다시 들어가지 않는다', () async {
+    SharedPreferences.setMockInitialValues({});
+    final storage = StorageService.instance;
+    for (final k in await storage.getKeywords()) {
+      await storage.removeKeyword(k);
+    }
+    expect(await storage.getKeywords(), isEmpty);
+  });
+
+  test('발행 후 30일이 지난 기사는 저장하지 않는다', () async {
+    final storage = StorageService.instance;
+    final old = MatchedArticle(
+      id: 'old',
+      title: '오래된 기사',
+      link: 'https://example.com/old',
+      pubDate: DateTime.now().subtract(const Duration(days: 31)),
+      description: '',
+      keywords: const ['k'],
+      fetchedAt: DateTime.now(),
+    );
+    await storage.saveArticles([
+      _article('new', ['k']),
+      old,
+    ]);
+    await storage.saveLatestArticles([_article('new', []), old]);
+    expect((await storage.getArticles()).map((a) => a.id), ['new']);
+    expect((await storage.getLatestArticles()).map((a) => a.id), ['new']);
   });
 }

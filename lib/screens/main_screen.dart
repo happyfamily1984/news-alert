@@ -26,6 +26,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   int _index = 0;
   int _newsRefreshSignal = 0;
+  int _showLatestSignal = 0;
   final _homeKey = GlobalKey<HomeScreenState>();
 
   @override
@@ -103,7 +104,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed || !mounted) return;
-    _homeKey.currentState?.reload();
+    final home = _homeKey.currentState;
+    // 다시 읽고, 마지막 확인이 오래됐으면 바로 새로 받아 온다.
+    home?.reload().then((_) => home.refreshIfStale());
     setState(() => _newsRefreshSignal++);
   }
 
@@ -190,9 +193,17 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               key: _homeKey,
               settings: widget.settings,
               onGoNews: () => _onTab(1),
+              onGoLatest: () {
+                setState(() => _showLatestSignal++);
+                _onTab(1);
+              },
+              onArticlesChanged: () => setState(() => _newsRefreshSignal++),
               onAddKeyword: _openAddKeyword,
             ),
-            NewsListScreen(refreshSignal: _newsRefreshSignal),
+            NewsListScreen(
+              refreshSignal: _newsRefreshSignal,
+              showLatestSignal: _showLatestSignal,
+            ),
             SettingsScreen(settings: widget.settings),
           ],
         ),
